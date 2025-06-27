@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
-import { Link } from 'react-router-dom';
 import './Home.css';
 import AuthContext from './context/AuthContext';
 import api from './api';

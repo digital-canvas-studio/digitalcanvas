@@ -48,7 +48,6 @@ const ReservationForm = ({ onAddEvent }) => {
   const [date, setDate] = useState('');
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
-  const { token } = useContext(AuthContext);
 
   const [availableSpaces, setAvailableSpaces] = useState([]);
   const availableEquipment = [
@@ -252,28 +251,30 @@ function Reservation() {
   };
 
   const handleEventClick = async (clickInfo) => {
+    // 로그인하지 않은 사용자는 상세 정보 모달을 띄움
     if (!token) {
       setSelectedEvent(clickInfo.event);
       setIsModalOpen(true);
-    } else {
-      if (window.confirm(`'${clickInfo.event.title}' 예약을 삭제하시겠습니까?`)) {
-        try {
-          const response = await api.delete(`/api/schedules/${clickInfo.event.id}`);
-          if (!response.ok) {
-            if (response.status === 401 || response.status === 403) {
-              throw new Error('인증되지 않았습니다. 다시 로그인해주세요.');
-            }
-            throw new Error('예약 삭제에 실패했습니다.');
-          }
-          // UI에서 즉시 이벤트 제거
-          setEvents(prevEvents => prevEvents.filter(event => event.id !== clickInfo.event.id));
-          alert('예약이 삭제되었습니다.');
-        } catch (error) {
-          console.error('Error deleting reservation:', error);
-          alert(error.message);
-        }
+      return;
+    }
+
+    // 로그인한 사용자는 삭제 여부를 물음
+    if (window.confirm(`'${clickInfo.event.title}' 예약을 삭제하시겠습니까?`)) {
+      try {
+        await api.delete(`/api/schedules/${clickInfo.event.id}`);
+        // UI에서 이벤트 제거
+        clickInfo.event.remove();
+        alert('예약이 삭제되었습니다.');
+      } catch (error) {
+        console.error('Error deleting reservation:', error);
+        alert(error.response?.data?.error || '예약 삭제에 실패했습니다.');
       }
     }
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedEvent(null);
   };
 
   return (
@@ -286,6 +287,12 @@ function Reservation() {
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
         initialView={getInitialView()}
         views={{
+          timeGridWeek: {
+            buttonText: '주',
+          },
+          dayGridMonth: {
+            buttonText: '월',
+          },
           timeGridFourDay: {
             type: 'timeGrid',
             duration: { days: 4 },
@@ -316,13 +323,13 @@ function Reservation() {
       {token && <ReservationForm onAddEvent={handleAddEvent} />}
 
       {isModalOpen && selectedEvent && (
-        <div className="modal-overlay">
-          <div className="modal-content">
+        <div className="modal-backdrop" onClick={closeModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h3>예약 상세 정보</h3>
             <p><strong>날짜:</strong> {selectedEvent.start.toLocaleDateString('ko-KR')}</p>
             <p><strong>시간대:</strong> {selectedEvent.start.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })} - {selectedEvent.end.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}</p>
             <p><strong>예약내용:</strong> {selectedEvent.title}</p>
-            <button onClick={() => setIsModalOpen(false)}>닫기</button>
+            <button onClick={closeModal}>닫기</button>
           </div>
         </div>
       )}
