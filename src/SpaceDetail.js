@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import './PostDetail.css';
 import AuthContext from './context/AuthContext';
+import api from './api';
 
 function SpaceDetail() {
   const { id } = useParams();
@@ -14,14 +15,12 @@ function SpaceDetail() {
   useEffect(() => {
     const fetchSpace = async () => {
       try {
-        const response = await fetch(`/api/spaces/${id}`);
-        if (!response.ok) throw new Error('Failed to fetch space details');
-        const data = await response.json();
-        setSpace(data);
-        setLoading(false);
+        const response = await api.get(`/api/spaces/${id}`);
+        setSpace(response.data);
       } catch (error) {
         console.error("Error fetching space details:", error);
         setError(error);
+      } finally {
         setLoading(false);
       }
     };
@@ -31,10 +30,7 @@ function SpaceDetail() {
   const handleDelete = async () => {
     if (window.confirm('정말로 이 공간 정보를 삭제하시겠습니까?')) {
       try {
-        const response = await fetch(`/api/spaces/${id}`, {
-          method: 'DELETE',
-        });
-        if (!response.ok) throw new Error('Failed to delete space');
+        await api.delete(`/api/spaces/${id}`);
         alert('공간 정보가 삭제되었습니다.');
         navigate('/space');
       } catch (error) {

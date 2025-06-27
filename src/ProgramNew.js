@@ -1,14 +1,11 @@
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
-import Bold from '@tiptap/extension-bold';
-import Italic from '@tiptap/extension-italic';
-import Heading from '@tiptap/extension-heading';
 import Placeholder from '@tiptap/extension-placeholder';
 import './HomeEdit.css';
-import AuthContext from './context/AuthContext';
+import api from './api';
 
 const MenuBar = ({ editor, onImageInsertClick }) => {
   if (!editor) return null;
@@ -29,17 +26,14 @@ function ProgramNew() {
   const [thumbnailUrl, setThumbnailUrl] = useState('');
   const [isImageUrlInputVisible, setIsImageUrlInputVisible] = useState(false);
   const [imageUrl, setImageUrl] = useState('');
-  const { token } = useContext(AuthContext);
 
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
         hardBreak: false,
+        heading: { levels: [1, 2] },
       }),
       Image,
-      Bold,
-      Italic,
-      Heading.configure({ levels: [1, 2] }),
       Placeholder.configure({ placeholder: '프로그램 상세 내용을 입력하세요...' }),
     ],
     content: '',
@@ -50,32 +44,17 @@ function ProgramNew() {
     if (!editor) return;
 
     const content = editor.getHTML();
-    const programData = { title, content, thumbnailUrl };
-
-    console.log('--- SUBMITTING PROGRAM DATA ---');
-    console.log(programData);
-
+    
     // 기본 유효성 검사
     if (!title.trim() || !thumbnailUrl.trim() || content === '<p></p>') {
       alert('모든 필드를 채워주세요.');
       return;
     }
 
+    const programData = { title, content, thumbnailUrl };
+
     try {
-      const response = await fetch('/api/programs', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-        },
-        body: JSON.stringify(programData),
-      });
-      if (!response.ok) {
-        // 서버로부터 받은 에러 메시지를 확인
-        const errorData = await response.text();
-        console.error('Server response error:', errorData);
-        throw new Error('Failed to create program');
-      }
+      await api.post('/api/programs', programData);
       alert('프로그램이 성공적으로 등록되었습니다.');
       navigate('/program');
     } catch (error) {

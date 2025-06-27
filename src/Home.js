@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import './Home.css';
 import AuthContext from './context/AuthContext';
+import api from './api';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useEditor, EditorContent } from '@tiptap/react';
@@ -157,15 +158,15 @@ function Home() {
 
   const fetchAbout = async () => {
     try {
-      const response = await fetch('/api/abouts');
-      if (response.ok) {
-        const data = await response.json();
-        setAbout(data);
-      } else if (response.status === 404) {
-        setAbout({ title: '디지털도화서란?', content: '<p>누구나 자유롭게 창작하고, 디지털로 소통하는 열린 공간입니다.</p>' });
-      }
+      const response = await api.get('/api/abouts');
+      setAbout(response.data);
     } catch (error) {
-      setAbout({ title: '디지털도화서란?', content: '<p>누구나 자유롭게 창작하고, 디지털로 소통하는 열린 공간입니다.</p>' });
+      console.error("About 데이터 로딩 실패:", error);
+      if (error.response && error.response.status === 404) {
+        setAbout({ title: '디지털도화서란?', content: '<p>누구나 자유롭게 창작하고, 디지털로 소통하는 열린 공간입니다.</p>' });
+      } else {
+        setAbout({ title: '디지털도화서란?', content: '<p>데이터를 불러오는 중 문제가 발생했습니다.</p>' });
+      }
     }
   };
 
@@ -187,33 +188,25 @@ function Home() {
     // 서버에 저장
     try {
       const htmlContent = editor ? editor.getHTML() : editContent;
-      const res = await fetch('/api/abouts', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({
-          ...about,
-          mainText: editMain,
-          subText: editSub,
-          btn1: editBtn1,
-          btn2: editBtn2,
-          btn1Link: editBtn1Link,
-          btn2Link: editBtn2Link,
-          mainImage: editMainImage,
-          content: htmlContent,
-        }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setAbout(data);
-        setEditMode(false);
-      } else {
-        alert('저장 실패');
-      }
+      const payload = {
+        ...about,
+        mainText: editMain,
+        subText: editSub,
+        btn1: editBtn1,
+        btn2: editBtn2,
+        btn1Link: editBtn1Link,
+        btn2Link: editBtn2Link,
+        mainImage: editMainImage,
+        content: htmlContent,
+      };
+      
+      const res = await api.put('/api/abouts', payload);
+
+      setAbout(res.data);
+      setEditMode(false);
     } catch (e) {
       alert('저장 중 오류 발생');
+      console.error(e);
     }
   };
   const handleCancel = () => {

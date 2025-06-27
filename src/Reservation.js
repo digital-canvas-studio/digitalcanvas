@@ -5,6 +5,7 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import './Reservation.css';
 import AuthContext from './context/AuthContext';
+import api from './api';
 
 const renderEventContent = (eventInfo) => {
   const { view, event } = eventInfo;
@@ -66,9 +67,8 @@ const ReservationForm = ({ onAddEvent }) => {
   useEffect(() => {
     const fetchSpaces = async () => {
       try {
-        const response = await fetch('/api/spaces');
-        const data = await response.json();
-        setAvailableSpaces(data);
+        const response = await api.get('/api/spaces');
+        setAvailableSpaces(response.data);
       } catch (error) {
         console.error("Error fetching spaces:", error);
       }
@@ -103,12 +103,6 @@ const ReservationForm = ({ onAddEvent }) => {
     }
 
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        alert('로그인이 필요합니다.');
-        return;
-      }
-
       // 제목 생성
       const titleParts = [];
       if (selectedSpaces.length > 0) {
@@ -139,21 +133,9 @@ const ReservationForm = ({ onAddEvent }) => {
         notes
       };
 
-      const response = await fetch('/api/schedules', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(reservationData)
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || '예약 생성에 실패했습니다.');
-      }
+      const response = await api.post('/api/schedules', reservationData);
       
-      const savedReservation = await response.json();
+      const savedReservation = response.data;
       onAddEvent(savedReservation);
 
       // 폼 초기화
@@ -165,7 +147,8 @@ const ReservationForm = ({ onAddEvent }) => {
       alert('예약이 성공적으로 등록되었습니다.');
     } catch (error) {
       console.error('Error creating reservation:', error);
-      alert(error.message);
+      const errorMessage = error.response?.data?.error || '예약 생성에 실패했습니다.';
+      alert(errorMessage);
     }
   };
 
@@ -254,15 +237,13 @@ function Reservation() {
   useEffect(() => {
     const fetchReservations = async () => {
       try {
-        const response = await fetch('/api/schedules');
-        if (!response.ok) throw new Error('Failed to fetch reservations');
-        const data = await response.json();
-        setEvents(data.map(formatEvent));
+        const response = await api.get('/api/schedules');
+        const formattedEvents = response.data.map(formatEvent);
+        setEvents(formattedEvents);
       } catch (error) {
         console.error("Error fetching reservations:", error);
       }
     };
-
     fetchReservations();
   }, []);
   
@@ -277,12 +258,7 @@ function Reservation() {
     } else {
       if (window.confirm(`'${clickInfo.event.title}' 예약을 삭제하시겠습니까?`)) {
         try {
-          const response = await fetch(`/api/schedules/${clickInfo.event.id}`, {
-            method: 'DELETE',
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
+          const response = await api.delete(`/api/schedules/${clickInfo.event.id}`);
           if (!response.ok) {
             if (response.status === 401 || response.status === 403) {
               throw new Error('인증되지 않았습니다. 다시 로그인해주세요.');

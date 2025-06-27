@@ -4,6 +4,7 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import './HomeEdit.css'; // 공통 에디터 스타일 사용
+import api from './api';
 
 const MenuBar = ({ editor }) => {
     if (!editor) {
@@ -48,27 +49,13 @@ function SpaceNew() {
         const content = editor.getHTML();
 
         try {
-            const response = await fetch('/api/spaces', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ 
-                    title, 
-                    content 
-                }),
-            });
-
-            if (response.ok) {
-                alert('새 글이 등록되었습니다.');
-                navigate('/space');
-            } else {
-                const errorData = await response.json();
-                alert(`글 등록에 실패했습니다: ${errorData.error}`);
-            }
+            await api.post('/api/spaces', { title, content });
+            alert('새 글이 등록되었습니다.');
+            navigate('/space');
         } catch (error) {
             console.error('Error creating space:', error);
-            alert('글 등록 중 오류가 발생했습니다.');
+            const errorMessage = error.response?.data?.error || '글 등록 중 오류가 발생했습니다.';
+            alert(errorMessage);
         }
     };
 

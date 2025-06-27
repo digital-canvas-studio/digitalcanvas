@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import './PostDetail.css'; // 기존 CSS 재활용
+import api from './api';
 
 function NoticeDetail() {
   const [notice, setNotice] = useState(null);
@@ -10,12 +11,11 @@ function NoticeDetail() {
   useEffect(() => {
     const fetchNotice = async () => {
       try {
-        const response = await fetch(`/api/notices/${id}`);
-        if (!response.ok) throw new Error('Notice not found');
-        const data = await response.json();
-        setNotice(data);
+        const response = await api.get(`/api/notices/${id}`);
+        setNotice(response.data);
       } catch (error) {
         console.error("Error fetching notice:", error);
+        alert("공지사항을 불러오는 데 실패했습니다.");
         navigate('/notice');
       }
     };
@@ -25,17 +25,12 @@ function NoticeDetail() {
   const handleDelete = async () => {
     if (window.confirm('정말로 이 공지사항을 삭제하시겠습니까?')) {
       try {
-        const response = await fetch(`/api/notices/${id}`, {
-          method: 'DELETE',
-        });
-        if (!response.ok) {
-          throw new Error('삭제에 실패했습니다.');
-        }
+        await api.delete(`/api/notices/${id}`);
         alert('공지사항이 삭제되었습니다.');
         navigate('/notice');
       } catch (error) {
         console.error("Error deleting notice:", error);
-        alert(error.message);
+        alert("삭제에 실패했습니다.");
       }
     }
   };

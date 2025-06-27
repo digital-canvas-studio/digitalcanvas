@@ -2,12 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import Bold from '@tiptap/extension-bold';
-import Italic from '@tiptap/extension-italic';
-import Heading from '@tiptap/extension-heading';
 import Placeholder from '@tiptap/extension-placeholder';
 import Image from '@tiptap/extension-image';
 import './HomeEdit.css'; // 스타일 재사용
+import api from './api';
 
 const MenuBar = ({ editor, onImageInsertClick }) => {
   if (!editor) {
@@ -35,11 +33,9 @@ function NoticeEdit() {
     extensions: [
       StarterKit.configure({
         hardBreak: false,
+        heading: { levels: [1, 2] },
       }),
       Image,
-      Bold,
-      Italic,
-      Heading.configure({ levels: [1, 2] }),
       Placeholder.configure({ placeholder: '여기에 내용을 입력하세요...' }),
     ],
     content: '',
@@ -49,13 +45,13 @@ function NoticeEdit() {
     if (!id || !editor) return;
     const fetchNotice = async () => {
       try {
-        const response = await fetch(`/api/notices/${id}`);
-        if (!response.ok) throw new Error('Failed to fetch notice data');
-        const data = await response.json();
+        const response = await api.get(`/api/notices/${id}`);
+        const data = response.data;
         setTitle(data.title);
         editor.commands.setContent(data.content);
       } catch (error) {
         console.error('Error fetching notice data:', error);
+        alert('공지사항 정보를 불러오는데 실패했습니다.');
         navigate('/notice'); // 에러 발생 시 목록으로
       }
     };
@@ -65,12 +61,7 @@ function NoticeEdit() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch(`/api/notices/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, content: editor.getHTML() }),
-      });
-      if (!response.ok) throw new Error('Failed to update notice data');
+      await api.put(`/api/notices/${id}`, { title, content: editor.getHTML() });
       alert('공지사항이 성공적으로 수정되었습니다.');
       navigate(`/notice/${id}`);
     } catch (error) {

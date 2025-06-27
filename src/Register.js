@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import './Login.css'; // 로그인과 동일한 스타일 사용
+import api from './api';
 
 function Register() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const navigate = useNavigate();
@@ -20,21 +23,17 @@ function Register() {
     }
 
     try {
-      const response = await fetch('/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
+      const response = await api.post('/api/register', { username, password, email, name });
+      
+      setSuccess(response.data.message || '회원가입 성공! 잠시 후 로그인 페이지로 이동합니다.');
+      setTimeout(() => navigate('/login'), 2000);
 
-      const data = await response.json();
-      if (response.ok) {
-        setSuccess('회원가입 성공! 잠시 후 로그인 페이지로 이동합니다.');
-        setTimeout(() => navigate('/login'), 2000);
-      } else {
-        setError(data.message || '회원가입에 실패했습니다.');
-      }
     } catch (err) {
-      setError('서버에 연결할 수 없습니다.');
+      if (err.response && err.response.data && err.response.data.error) {
+        setError(err.response.data.error);
+      } else {
+        setError('서버에 연결할 수 없습니다.');
+      }
     }
   };
 
@@ -51,6 +50,26 @@ function Register() {
             id="username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
+            required
+          />
+        </div>
+        <div className="form-group">
+          <label htmlFor="email">이메일</label>
+          <input
+            type="email"
+            id="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
+        <div className="form-group">
+          <label htmlFor="name">이름</label>
+          <input
+            type="text"
+            id="name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
             required
           />
         </div>

@@ -2,12 +2,9 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import Bold from '@tiptap/extension-bold';
-import Italic from '@tiptap/extension-italic';
-import Heading from '@tiptap/extension-heading';
 import Placeholder from '@tiptap/extension-placeholder';
-import Image from '@tiptap/extension-image';
 import './HomeEdit.css';
+import api from './api';
 
 const MenuBar = ({ editor }) => {
   if (!editor) {
@@ -32,10 +29,8 @@ function NoticeNew() {
     extensions: [
       StarterKit.configure({
         hardBreak: false,
+        heading: { levels: [1, 2] },
       }),
-      Bold,
-      Italic,
-      Heading.configure({ levels: [1, 2] }),
       Placeholder.configure({ placeholder: '내용을 입력하세요...' }),
     ],
     content: '',
@@ -46,12 +41,7 @@ function NoticeNew() {
     if (!editor) return;
 
     try {
-      const response = await fetch('/api/notices', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, content: editor.getHTML() }),
-      });
-      if (!response.ok) throw new Error('Failed to create notice');
+      await api.post('/api/notices', { title, content: editor.getHTML() });
       alert('공지사항이 성공적으로 등록되었습니다.');
       navigate('/notice');
     } catch (error) {

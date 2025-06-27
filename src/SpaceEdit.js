@@ -3,11 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
-import Bold from '@tiptap/extension-bold';
-import Italic from '@tiptap/extension-italic';
-import Heading from '@tiptap/extension-heading';
 import Placeholder from '@tiptap/extension-placeholder';
 import './SpaceEdit.css';
+import api from './api';
 
 const MenuBar = ({ editor, onImageInsertClick }) => {
   if (!editor) {
@@ -36,11 +34,11 @@ function SpaceEdit() {
     extensions: [
       StarterKit.configure({
         hardBreak: false,
+        heading: {
+          levels: [1, 2],
+        },
       }),
       Image,
-      Bold,
-      Italic,
-      Heading.configure({ levels: [1, 2] }),
       Placeholder.configure({ placeholder: '여기에 내용을 입력하세요...' }),
     ],
     content: space.content,
@@ -52,10 +50,8 @@ function SpaceEdit() {
   useEffect(() => {
     const fetchSpace = async () => {
       try {
-        const response = await fetch(`/api/spaces/${id}`);
-        if (!response.ok) throw new Error('Failed to fetch space data');
-        const data = await response.json();
-        setSpace(data);
+        const response = await api.get(`/api/spaces/${id}`);
+        setSpace(response.data);
       } catch (error) {
         console.error('Error fetching space data:', error);
       }
@@ -77,15 +73,11 @@ function SpaceEdit() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch(`/api/spaces/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          ...space, 
-          content: editor.getHTML() 
-        }),
-      });
-      if (!response.ok) throw new Error('Failed to update space data');
+      const payload = { 
+        ...space, 
+        content: editor.getHTML() 
+      };
+      await api.put(`/api/spaces/${id}`, payload);
       alert('공간 정보가 성공적으로 업데이트되었습니다.');
       navigate(`/space/${id}`);
     } catch (error) {
