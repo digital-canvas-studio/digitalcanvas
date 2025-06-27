@@ -40,7 +40,18 @@ app.get('/health', (req, res) => {
 
 // Basic route
 app.get('/', (req, res) => {
-  res.json({ message: 'Digital Canvas Backend API' });
+  res.json({ 
+    message: 'Digital Canvas Backend API',
+    status: 'running',
+    version: '1.0.0',
+    timestamp: new Date().toISOString(),
+    endpoints: {
+      health: '/health',
+      programs: '/api/programs',
+      spaces: '/api/spaces',
+      notices: '/api/notices'
+    }
+  });
 });
 
 // Placeholder API routes
