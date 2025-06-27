@@ -8,6 +8,14 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Redirect www to naked domain
+app.use((req, res, next) => {
+  if (req.headers.host === 'knuh-ditdo.kr') {
+    return res.redirect(301, 'https://www.knuh-ditdo.kr' + req.originalUrl);
+  }
+  next();
+});
+
 // JWT Secret (환경변수에서 가져오거나 기본값 사용)
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
