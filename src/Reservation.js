@@ -86,56 +86,75 @@ const ReservationForm = ({ onAddEvent }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!token) {
-      alert('로그인이 필요합니다.');
+    
+    if (!date || !startTime || !endTime) {
+      alert('날짜와 시간을 모두 입력해주세요.');
       return;
     }
 
-    if ((selectedSpaces.length === 0 && selectedEquipment.length === 0) || !date || !startTime || !endTime) {
-      alert('예약할 항목을 선택하고, 모든 시간 필드를 입력해주세요.');
+    if (startTime >= endTime) {
+      alert('종료 시간은 시작 시간보다 늦어야 합니다.');
       return;
     }
 
-    const startDateTime = new Date(`${date}T${startTime}`);
-    const endDateTime = new Date(`${date}T${endTime}`);
-
-    if (startDateTime >= endDateTime) {
-      alert('시작 시간은 종료 시간보다 빨라야 합니다.');
+    if (selectedSpaces.length === 0 && selectedEquipment.length === 0) {
+      alert('공간 또는 장비를 최소 하나는 선택해주세요.');
       return;
     }
-
-    const reservationsToCreate = [
-      ...selectedSpaces.map(space => ({ title: space.title, type: 'space' })),
-      ...selectedEquipment.map(item => ({ title: item, type: 'equipment' })),
-    ];
 
     try {
-      for (const res of reservationsToCreate) {
-        const newReservation = {
-          title: res.title,
-          start: startDateTime.toISOString(),
-          end: endDateTime.toISOString(),
-          type: res.type,
-        };
-        const response = await fetch('/api/schedules', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify(newReservation),
-        });
-        if (!response.ok) {
-          if (response.status === 401 || response.status === 403) {
-            throw new Error('인증되지 않았습니다. 다시 로그인해주세요.');
-          }
-          throw new Error(`'${res.title}' 예약 생성에 실패했습니다.`);
-        }
-        
-        const savedReservation = await response.json();
-        onAddEvent(savedReservation);
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('로그인이 필요합니다.');
+        return;
       }
+
+      // 제목 생성
+      const titleParts = [];
+      if (selectedSpaces.length > 0) {
+        titleParts.push(selectedSpaces.map(space => space.title || space).join(', '));
+      }
+      if (selectedEquipment.length > 0) {
+        titleParts.push(selectedEquipment.join(', '));
+      }
+      const title = titleParts.join(' + ');
+
+      // 날짜와 시간을 합쳐서 ISO 문자열 생성
+      const startDateTime = new Date(`${date}T${startTime}:00`);
+      const endDateTime = new Date(`${date}T${endTime}:00`);
+
+      // 예약 타입 결정
+      const type = selectedSpaces.length > 0 ? 'space' : 'equipment';
+
+      // notes 생성
+      const notes = titleParts.join(' + ');
+
+      const reservationData = {
+        title,
+        start: startDateTime.toISOString(),
+        end: endDateTime.toISOString(),
+        type,
+        spaces: selectedSpaces.map(space => space.title || space),
+        equipment: selectedEquipment,
+        notes
+      };
+
+      const response = await fetch('/api/schedules', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(reservationData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || '예약 생성에 실패했습니다.');
+      }
+      
+      const savedReservation = await response.json();
+      onAddEvent(savedReservation);
 
       // 폼 초기화
       setSelectedSpaces([]);
@@ -221,8 +240,15 @@ function Reservation() {
     start: new Date(reservation.start),
     end: new Date(reservation.end),
     allDay: false,
-    backgroundColor: reservation.type === 'space' ? '#f39c12' : '#3498db',
-    borderColor: reservation.type === 'space' ? '#f39c12' : '#3498db',
+    backgroundColor: reservation.type === 'space' ? '#3498db' : '#e74c3c',
+    borderColor: reservation.type === 'space' ? '#3498db' : '#e74c3c',
+    extendedProps: {
+      type: reservation.type,
+      spaces: reservation.spaces,
+      equipment: reservation.equipment,
+      notes: reservation.notes,
+      status: reservation.status
+    }
   });
 
   useEffect(() => {
@@ -317,9 +343,9 @@ function Reservation() {
         <div className="modal-overlay">
           <div className="modal-content">
             <h3>예약 상세 정보</h3>
-            <p><strong>항목:</strong> {selectedEvent.title}</p>
-            <p><strong>시작:</strong> {selectedEvent.start.toLocaleString('ko-KR')}</p>
-            <p><strong>종료:</strong> {selectedEvent.end.toLocaleString('ko-KR')}</p>
+            <p><strong>날짜:</strong> {selectedEvent.start.toLocaleDateString('ko-KR')}</p>
+            <p><strong>시간대:</strong> {selectedEvent.start.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })} - {selectedEvent.end.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}</p>
+            <p><strong>예약내용:</strong> {selectedEvent.title}</p>
             <button onClick={() => setIsModalOpen(false)}>닫기</button>
           </div>
         </div>

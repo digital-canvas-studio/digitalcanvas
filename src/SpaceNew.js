@@ -53,7 +53,10 @@ function SpaceNew() {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ title, content }),
+                body: JSON.stringify({ 
+                    title, 
+                    content 
+                }),
             });
 
             if (response.ok) {
@@ -61,7 +64,7 @@ function SpaceNew() {
                 navigate('/space');
             } else {
                 const errorData = await response.json();
-                alert(`글 등록에 실패했습니다: ${errorData.message}`);
+                alert(`글 등록에 실패했습니다: ${errorData.error}`);
             }
         } catch (error) {
             console.error('Error creating space:', error);

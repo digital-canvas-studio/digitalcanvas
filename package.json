@@ -30,8 +30,8 @@
     "gsap": "^3.13.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^7.5.0",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "react-icons": "^5.5.0",
     "react-router-dom": "^7.6.2",
     "react-scripts": "5.0.1",
@@ -62,5 +62,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "eslint-plugin-jest": "^29.0.1"
   }
 }

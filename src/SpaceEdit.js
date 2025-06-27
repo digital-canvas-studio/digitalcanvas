@@ -80,7 +80,10 @@ function SpaceEdit() {
       const response = await fetch(`/api/spaces/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...space, content: editor.getHTML() }),
+        body: JSON.stringify({ 
+          ...space, 
+          content: editor.getHTML() 
+        }),
       });
       if (!response.ok) throw new Error('Failed to update space data');
       alert('공간 정보가 성공적으로 업데이트되었습니다.');
