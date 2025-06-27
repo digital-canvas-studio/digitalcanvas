@@ -145,6 +145,30 @@ const About = mongoose.model('About', aboutSchema, 'abouts');
 const User = mongoose.model('User', userSchema, 'users');
 const Schedule = mongoose.model('Schedule', scheduleSchema, 'schedules');
 
+// API for About section (Main page content)
+app.get('/api/abouts', async (req, res) => {
+  try {
+    // abouts 컬렉션은 문서가 하나만 있을 것으로 가정
+    const aboutData = await About.findOne();
+    if (!aboutData) {
+      return res.status(404).json({ message: 'About data not found.' });
+    }
+    res.json(aboutData);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+app.put('/api/abouts', async (req, res) => {
+  try {
+    // findOneAndUpdate를 사용하여 첫 번째 문서를 찾아 업데이트하거나, 문서가 없으면 생성(upsert: true)
+    const updatedAbout = await About.findOneAndUpdate({}, req.body, { new: true, upsert: true });
+    res.json(updatedAbout);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Authentication middleware
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];

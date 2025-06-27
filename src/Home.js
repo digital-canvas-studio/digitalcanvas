@@ -7,9 +7,6 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
-import Bold from '@tiptap/extension-bold';
-import Italic from '@tiptap/extension-italic';
-import Heading from '@tiptap/extension-heading';
 import Placeholder from '@tiptap/extension-placeholder';
 import TextAlign from '@tiptap/extension-text-align';
 
@@ -69,11 +66,13 @@ function Home() {
   // Tiptap 에디터 인스턴스
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        // StarterKit에 포함된 기능 중 heading만 커스텀 설정
+        heading: {
+          levels: [1, 2],
+        },
+      }),
       Image,
-      Bold,
-      Italic,
-      Heading.configure({ levels: [1, 2] }),
       Placeholder.configure({ placeholder: '소개글을 입력하세요...' }),
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
     ],
@@ -158,7 +157,7 @@ function Home() {
 
   const fetchAbout = async () => {
     try {
-      const response = await fetch('/api/about');
+      const response = await fetch('/api/abouts');
       if (response.ok) {
         const data = await response.json();
         setAbout(data);
@@ -188,7 +187,7 @@ function Home() {
     // 서버에 저장
     try {
       const htmlContent = editor ? editor.getHTML() : editContent;
-      const res = await fetch('/api/about', {
+      const res = await fetch('/api/abouts', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
