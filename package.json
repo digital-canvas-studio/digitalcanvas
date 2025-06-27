@@ -40,7 +40,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "server": "dotenv -e .env -- node src/server.js",
+    "server": "node backend/server.js",
     "dev": "concurrently \"npm start\" \"npm run server\"",
     "build": "react-scripts build",
     "test": "react-scripts test",
