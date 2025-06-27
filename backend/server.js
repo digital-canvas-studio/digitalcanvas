@@ -54,17 +54,66 @@ app.get('/', (req, res) => {
   });
 });
 
-// Placeholder API routes
-app.get('/api/programs', (req, res) => {
-  res.json([]);
+// MongoDB Schemas
+const programSchema = new mongoose.Schema({
+  title: String,
+  description: String,
+  startDate: Date,
+  endDate: Date,
+  instructor: String,
+  maxParticipants: Number,
+  currentParticipants: Number,
+  category: String,
+  status: String
 });
 
-app.get('/api/spaces', (req, res) => {
-  res.json([]);
+const spaceSchema = new mongoose.Schema({
+  name: String,
+  capacity: Number,
+  equipment: [String],
+  status: String
 });
 
-app.get('/api/notices', (req, res) => {
-  res.json([]);
+const noticeSchema = new mongoose.Schema({
+  title: String,
+  content: String,
+  author: String,
+  createdAt: Date,
+  category: String,
+  status: String
+});
+
+// MongoDB Models
+const Program = mongoose.model('Program', programSchema);
+const Space = mongoose.model('Space', spaceSchema);
+const Notice = mongoose.model('Notice', noticeSchema);
+
+// API routes
+app.get('/api/programs', async (req, res) => {
+  try {
+    const programs = await Program.find();
+    res.json(programs);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/spaces', async (req, res) => {
+  try {
+    const spaces = await Space.find();
+    res.json(spaces);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/notices', async (req, res) => {
+  try {
+    const notices = await Notice.find();
+    res.json(notices);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 app.listen(PORT, () => {
