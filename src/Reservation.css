@@ -312,7 +312,7 @@
 }
 
 /* Modal Styles */
-.modal-overlay {
+.modal-backdrop {
   position: fixed;
   top: 0;
   left: 0;
@@ -334,6 +334,10 @@
   max-width: 500px;
   text-align: left;
   animation: modal-fade-in 0.3s ease-out;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 @keyframes modal-fade-in {
@@ -369,7 +373,7 @@
 }
 
 .modal-content button {
-  float: right;
+  align-self: flex-end;
   margin-top: 20px;
   padding: 10px 20px;
   background-color: #000;
@@ -380,6 +384,7 @@
   font-size: 15px;
   font-weight: 500;
   transition: background-color 0.2s;
+  margin-bottom: 0;
 }
 
 .modal-content button:hover {
