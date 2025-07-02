@@ -41,12 +41,13 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// MongoDB Connection
+// MongoDB Connection (with connection pool)
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
+  maxPoolSize: 10, // 동시에 최대 10개 커넥션 유지
 })
-.then(() => console.log('Successfully connected to MongoDB'))
+.then(() => console.log('Successfully connected to MongoDB (with connection pool)'))
 .catch(err => console.error('Could not connect to MongoDB', err));
 
 // Health check endpoint
@@ -762,24 +763,6 @@ app.post('/api/schedules', authenticateToken, async (req, res) => {
     
     if (startDate >= endDate) {
       return res.status(400).json({ error: 'End time must be after start time' });
-    }
-
-    // 겹치는 예약 확인
-    const conflictingSchedule = await Schedule.findOne({
-      $and: [
-        {
-          $or: [
-            { start: { $lt: endDate, $gte: startDate } },
-            { end: { $gt: startDate, $lte: endDate } },
-            { start: { $lte: startDate }, end: { $gte: endDate } }
-          ]
-        },
-        { status: { $ne: 'cancelled' } }
-      ]
-    });
-
-    if (conflictingSchedule) {
-      return res.status(409).json({ error: 'Time slot is already booked' });
     }
 
     const newSchedule = new Schedule({

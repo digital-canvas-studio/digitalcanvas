@@ -216,14 +216,31 @@ function Reservation() {
     return window.innerWidth <= 768 ? 'timeGridFourDay' : 'timeGridWeek';
   };
 
+  // 랜덤 색상 생성 함수
+  const getRandomColor = () => {
+    const colors = [
+      '#3498db', // 파랑
+      '#e74c3c', // 빨강
+      '#f1c40f', // 노랑
+      '#2ecc71', // 초록
+      '#9b59b6', // 보라
+      '#1abc9c', // 청록
+      '#e67e22', // 주황
+      '#34495e', // 남색
+      '#fd79a8', // 핑크
+      '#00b894', // 민트
+    ];
+    return colors[Math.floor(Math.random() * colors.length)];
+  };
+
   const formatEvent = (reservation) => ({
     id: reservation._id,
     title: reservation.title,
     start: new Date(reservation.start),
     end: new Date(reservation.end),
     allDay: false,
-    backgroundColor: reservation.type === 'space' ? '#3498db' : '#e74c3c',
-    borderColor: reservation.type === 'space' ? '#3498db' : '#e74c3c',
+    backgroundColor: reservation.type === 'space' ? getRandomColor() : getRandomColor(),
+    borderColor: reservation.type === 'space' ? '#222' : '#222',
     extendedProps: {
       type: reservation.type,
       spaces: reservation.spaces,
