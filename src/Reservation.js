@@ -58,7 +58,8 @@ const ReservationForm = ({ onAddEvent }) => {
     '줌 사운드 레코더',
     '현장답사용 마이크리시버',
     '3D프린터',
-    '레이저각인기'
+    '레이저각인기',
+    '노트북' // 추가
   ];
 
   const timeOptions = generateTimeOptions();
@@ -67,7 +68,8 @@ const ReservationForm = ({ onAddEvent }) => {
     const fetchSpaces = async () => {
       try {
         const response = await api.get('/api/spaces');
-        setAvailableSpaces(response.data);
+        // 휴관 항목을 수동으로 추가
+        setAvailableSpaces([...response.data, { _id: 'closed', title: '휴관' }]);
       } catch (error) {
         console.error("Error fetching spaces:", error);
       }
