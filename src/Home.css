@@ -181,13 +181,30 @@
   align-items: center;
   justify-content: center;
   margin-bottom: 0.5rem;
-  transition: transform 0.18s, box-shadow 0.18s;
+  transition: transform 0.18s, box-shadow 0.18s, background-color 0.3s;
   padding: 0;
+  text-decoration: none;
+  color: #222;
 }
 
 .circle-card:hover {
   transform: scale(1.06) translateY(-6px);
   box-shadow: 0 8px 32px rgba(0,0,0,0.13);
+}
+
+.circle-card.sns-link {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+}
+
+.circle-card.sns-link .circle-label {
+  color: #fff;
+}
+
+.circle-card.sns-link:hover {
+  background: linear-gradient(135deg, #5568d3 0%, #63408a 100%);
+  transform: scale(1.1) translateY(-8px);
+  box-shadow: 0 12px 40px rgba(102, 126, 234, 0.4);
 }
 
 .circle-label {
@@ -504,8 +521,8 @@
   color: #fff;
   border: 1.5px solid #222;
   border-radius: 22px;
-  padding: 0.85rem 2.2rem;
-  font-size: 1.08rem;
+  padding: 0.75rem 1.8rem;
+  font-size: 0.95rem;
   font-weight: 700;
   cursor: pointer;
   box-shadow: 0 2px 12px rgba(0,0,0,0.13);
@@ -877,7 +894,23 @@
   background: #fff;
   color: #111;
   border-color: #fff;
-} 
+}
+
+.apple-btn.sns-btn {
+  background: transparent;
+  color: #fff;
+  border: 2px solid #fff;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.apple-btn.sns-btn:hover {
+  background: #fff;
+  color: #111;
+  border-color: #fff;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+}
+
 /* 팝업 스타일 */
 .popup-overlay {
   position: fixed;
@@ -902,13 +935,15 @@
   background: white;
   border-radius: 12px;
   padding: 30px;
-  max-width: 500px;
-  width: 90%;
-  max-height: 80vh;
+  max-width: 90vw;
+  width: auto;
+  max-height: 90vh;
   overflow-y: auto;
   position: relative;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
   animation: slideUp 0.3s ease;
+  display: flex;
+  flex-direction: column;
 }
 
 @keyframes slideUp {
@@ -954,13 +989,64 @@
 
 .popup-image-wrapper {
   margin-bottom: 20px;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: auto;
 }
 
 .popup-image {
-  width: 100%;
-  max-height: 300px;
-  object-fit: cover;
+  max-width: 100%;
+  max-height: 70vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
   border-radius: 8px;
+  background-color: #f5f5f5;
+}
+
+.popup-image-prev,
+.popup-image-next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  padding: 15px 20px;
+  font-size: 20px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+  z-index: 10;
+}
+
+.popup-image-prev:hover,
+.popup-image-next:hover {
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+.popup-image-prev {
+  left: 10px;
+}
+
+.popup-image-next {
+  right: 10px;
+}
+
+.popup-image-indicator {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 8px 15px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .popup-message {
@@ -1009,7 +1095,8 @@
 @media (max-width: 768px) {
   .popup-modal {
     padding: 20px;
-    max-width: 95%;
+    max-width: 95vw;
+    width: auto;
   }
 
   .popup-title {
@@ -1020,6 +1107,10 @@
     font-size: 14px;
   }
 
+  .popup-image {
+    max-height: 60vh;
+  }
+
   .popup-actions {
     flex-direction: column;
   }
@@ -1027,5 +1118,11 @@
   .popup-btn-today,
   .popup-btn-close {
     width: 100%;
+  }
+  
+  .popup-image-prev,
+  .popup-image-next {
+    padding: 10px 15px;
+    font-size: 16px;
   }
 }

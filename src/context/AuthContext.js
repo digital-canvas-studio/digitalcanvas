@@ -8,6 +8,13 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')) || null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const logout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setToken(null);
+    setUser(null);
+  };
+
   useEffect(() => {
     const fetchUser = async () => {
       if (token) {
@@ -19,6 +26,7 @@ export const AuthProvider = ({ children }) => {
         } catch (error) {
           console.error('Failed to fetch user', error);
           if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+            // 토큰이 유효하지 않은 경우에만 로그아웃
             logout();
           }
         }
@@ -26,6 +34,7 @@ export const AuthProvider = ({ children }) => {
       setIsLoading(false);
     };
     fetchUser();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   const login = (newToken, userData = null) => {
@@ -36,13 +45,6 @@ export const AuthProvider = ({ children }) => {
       setUser(userData);
       localStorage.setItem('user', JSON.stringify(userData));
     }
-  };
-
-  const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setToken(null);
-    setUser(null);
   };
 
   const isAuthenticated = () => {

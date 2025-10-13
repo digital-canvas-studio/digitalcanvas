@@ -24,7 +24,7 @@ function Navbar() {
     <nav className="navbar">
       <div className="navbar-title">
         <Link to="/" onClick={closeMenu}>
-          <img src="//nodetree.cafe24.com/%B5%F0%C1%F6%C5%D0%B5%B5%C8%AD%BC%AD/logo/logo2.png" alt="logo" className="navbar-logo" />
+          <img src="//nodetree.cafe24.com/%B5%F0%C1%F6%C5%D0%B5%B5%C8%AD%BC%AD/logo/logo4.png" alt="logo" className="navbar-logo" />
           디지털도화서
         </Link>
       </div>
@@ -43,6 +43,7 @@ function Navbar() {
         <li><Link to="/reservation" onClick={closeMenu}>예약/신청</Link></li>
         <li><Link to="/location" onClick={closeMenu}>위치</Link></li>
         {token && <li><Link to="/popup/manage" onClick={closeMenu}>팝업관리</Link></li>}
+        {token && <li><Link to="/statistics" onClick={closeMenu}>실적</Link></li>}
         {isMenuOpen && (
           <li className="navbar-login-mobile">
             {token ? (

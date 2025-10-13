@@ -144,6 +144,98 @@
   cursor: not-allowed;
 }
 
+.image-urls-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.add-image-row {
+  display: flex;
+  gap: 10px;
+}
+
+.add-image-row input {
+  flex: 1;
+  padding: 10px 15px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.btn-add-image {
+  padding: 10px 20px;
+  background-color: #000000;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.btn-add-image:hover {
+  background-color: #333;
+}
+
+.image-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.image-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+}
+
+.image-preview-small {
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 4px;
+  background-color: #e9ecef;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-preview-small img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.image-url-text {
+  flex: 1;
+  font-size: 13px;
+  color: #666;
+  word-break: break-all;
+}
+
+.btn-remove-image {
+  padding: 6px 12px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.btn-remove-image:hover {
+  background-color: #c82333;
+}
+
 .btn-cancel {
   flex: 1;
   padding: 12px 24px;
@@ -184,4 +276,5 @@
     flex-direction: column;
   }
 }
+
 

@@ -1,0 +1,254 @@
+.trained-user-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.trained-user-modal {
+  background-color: #1a1a1a;
+  border-radius: 12px;
+  max-width: 800px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 30px;
+  border-bottom: 1px solid #333;
+}
+
+.modal-header h2 {
+  color: #ffffff;
+  font-size: 24px;
+  margin: 0;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 32px;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-btn:hover {
+  color: #999;
+}
+
+.modal-body {
+  padding: 30px;
+}
+
+.equipment-selector {
+  margin-bottom: 30px;
+}
+
+.equipment-selector label {
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 500;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.radio-buttons {
+  display: flex;
+  gap: 20px;
+}
+
+.radio-buttons label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: normal;
+  cursor: pointer;
+}
+
+.radio-buttons input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #007bff;
+  cursor: pointer;
+}
+
+.register-form {
+  background-color: #222;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 30px;
+}
+
+.register-form h3 {
+  color: #ffffff;
+  font-size: 18px;
+  margin: 0 0 15px 0;
+}
+
+.input-group {
+  display: flex;
+  gap: 10px;
+}
+
+.input-group input {
+  flex: 1;
+  padding: 12px 15px;
+  background-color: #1a1a1a;
+  border: 1px solid #444;
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 14px;
+}
+
+.input-group input:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+.register-btn {
+  padding: 12px 24px;
+  background-color: #000000;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.3s;
+}
+
+.register-btn:hover {
+  background-color: #333;
+}
+
+.register-btn:disabled {
+  background-color: #444;
+  cursor: not-allowed;
+}
+
+.trained-users-list {
+  margin-top: 30px;
+}
+
+.trained-users-list h3 {
+  color: #ffffff;
+  font-size: 18px;
+  margin: 0 0 15px 0;
+}
+
+.empty-message {
+  color: #999;
+  text-align: center;
+  padding: 40px;
+  font-size: 14px;
+}
+
+.users-table {
+  background-color: #222;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.users-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.users-table thead {
+  background-color: #2a2a2a;
+}
+
+.users-table th {
+  padding: 15px;
+  text-align: left;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 500;
+  border-bottom: 1px solid #333;
+}
+
+.users-table td {
+  padding: 15px;
+  color: #ffffff;
+  font-size: 14px;
+  border-bottom: 1px solid #333;
+}
+
+.users-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.users-table tbody tr:hover {
+  background-color: #2a2a2a;
+}
+
+.delete-btn {
+  padding: 6px 12px;
+  background-color: #dc3545;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.delete-btn:hover {
+  background-color: #c82333;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .trained-user-modal {
+    max-width: 100%;
+    margin: 0;
+    border-radius: 0;
+    max-height: 100vh;
+  }
+
+  .modal-header {
+    padding: 15px 20px;
+  }
+
+  .modal-header h2 {
+    font-size: 20px;
+  }
+
+  .modal-body {
+    padding: 20px;
+  }
+
+  .input-group {
+    flex-direction: column;
+  }
+
+  .users-table {
+    overflow-x: auto;
+  }
+
+  .users-table table {
+    min-width: 500px;
+  }
+}
+

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import AuthContext from './context/AuthContext';
+import api from './api';
 import './PopupEdit.css';
 
 function PopupEdit() {
@@ -12,27 +13,29 @@ function PopupEdit() {
     title: '',
     message: '',
     imageUrl: '',
+    imageUrls: [],
     isActive: true,
     startDate: '',
     endDate: ''
   });
+  const [newImageUrl, setNewImageUrl] = useState('');
 
   const fetchPopup = useCallback(async () => {
     try {
-      const response = await fetch(`http://localhost:3001/api/popups/${id}`);
-      if (!response.ok) throw new Error('팝업을 불러오는데 실패했습니다.');
-      const data = await response.json();
+      const response = await api.get(`/api/popups/${id}`);
+      const data = response.data;
       
       setFormData({
         title: data.title || '',
         message: data.message || '',
         imageUrl: data.imageUrl || '',
+        imageUrls: data.imageUrls || [],
         isActive: data.isActive !== undefined ? data.isActive : true,
         startDate: data.startDate ? new Date(data.startDate).toISOString().split('T')[0] : '',
         endDate: data.endDate ? new Date(data.endDate).toISOString().split('T')[0] : ''
       });
     } catch (err) {
-      alert(err.message);
+      alert(err.message || '팝업을 불러오는데 실패했습니다.');
       navigate('/popup/manage');
     }
   }, [id, navigate]);
@@ -57,6 +60,38 @@ function PopupEdit() {
     }));
   };
 
+  const handleAddImage = (e) => {
+    if (e) e.preventDefault();
+    
+    if (!newImageUrl.trim()) {
+      alert('이미지 URL을 입력해주세요.');
+      return;
+    }
+
+    console.log('Adding image:', newImageUrl);
+    console.log('Current imageUrls:', formData.imageUrls);
+
+    setFormData(prev => {
+      const updated = {
+        ...prev,
+        imageUrls: [...(prev.imageUrls || []), newImageUrl.trim()]
+      };
+      console.log('Updated formData:', updated);
+      return updated;
+    });
+    setNewImageUrl('');
+    alert('이미지가 추가되었습니다.');
+  };
+
+  const handleRemoveImage = (e, index) => {
+    if (e) e.preventDefault();
+    
+    setFormData(prev => ({
+      ...prev,
+      imageUrls: (prev.imageUrls || []).filter((_, i) => i !== index)
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -68,31 +103,22 @@ function PopupEdit() {
     setLoading(true);
 
     try {
-      const token = localStorage.getItem('token');
-      const url = id 
-        ? `http://localhost:3001/api/popups/${id}` 
-        : 'http://localhost:3001/api/popups';
+      console.log('Saving formData:', formData);
+      console.log('ImageUrls to save:', formData.imageUrls);
       
-      const method = id ? 'PUT' : 'POST';
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(formData)
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || '저장에 실패했습니다.');
+      if (id) {
+        const response = await api.put(`/api/popups/${id}`, formData);
+        console.log('Save response:', response.data);
+      } else {
+        const response = await api.post('/api/popups', formData);
+        console.log('Save response:', response.data);
       }
 
       alert(id ? '수정되었습니다.' : '생성되었습니다.');
       navigate('/popup/manage');
     } catch (err) {
-      alert(err.message);
+      console.error('Save error:', err);
+      alert(err.response?.data?.error || err.message || '저장에 실패했습니다.');
     } finally {
       setLoading(false);
     }
@@ -135,7 +161,7 @@ function PopupEdit() {
         </div>
 
         <div className="form-group">
-          <label htmlFor="imageUrl">이미지 URL</label>
+          <label htmlFor="imageUrl">이미지 URL (단일 이미지 - 하위호환)</label>
           <input
             type="url"
             id="imageUrl"
@@ -149,6 +175,60 @@ function PopupEdit() {
               <img src={formData.imageUrl} alt="미리보기" />
             </div>
           )}
+        </div>
+
+        <div className="form-group">
+          <label>이미지 목록 (여러 이미지)</label>
+          <div className="image-urls-container">
+            <div className="add-image-row">
+              <input
+                type="url"
+                value={newImageUrl}
+                onChange={(e) => setNewImageUrl(e.target.value)}
+                placeholder="https://example.com/image.jpg"
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddImage(e);
+                  }
+                }}
+              />
+              <button type="button" onClick={handleAddImage} className="btn-add-image">
+                추가
+              </button>
+            </div>
+
+            {(formData.imageUrls && formData.imageUrls.length > 0) ? (
+              <div className="image-list">
+                <p style={{ color: '#666', fontSize: '13px', margin: '10px 0' }}>
+                  추가된 이미지: {formData.imageUrls.length}개
+                </p>
+                {formData.imageUrls.map((url, index) => (
+                  <div key={index} className="image-item">
+                    <div className="image-preview-small">
+                      <img 
+                        src={url} 
+                        alt={`이미지 ${index + 1}`} 
+                        onError={(e) => { e.target.src = 'https://via.placeholder.com/80?text=Error'; }}
+                      />
+                    </div>
+                    <div className="image-url-text">{url}</div>
+                    <button 
+                      type="button" 
+                      onClick={(e) => handleRemoveImage(e, index)}
+                      className="btn-remove-image"
+                    >
+                      삭제
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p style={{ color: '#999', fontSize: '13px', margin: '10px 0', fontStyle: 'italic' }}>
+                추가된 이미지가 없습니다.
+              </p>
+            )}
+          </div>
         </div>
 
         <div className="form-group-row">

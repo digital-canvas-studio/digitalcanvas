@@ -22,6 +22,7 @@ import Login from './Login';
 import Register from './Register';
 import PopupManage from './PopupManage';
 import PopupEdit from './PopupEdit';
+import Statistics from './Statistics';
 
 function App() {
   return (
@@ -50,6 +51,7 @@ function App() {
           <Route path="/popup/manage" element={<PopupManage />} />
           <Route path="/popup/new" element={<PopupEdit />} />
           <Route path="/popup/edit/:id" element={<PopupEdit />} />
+          <Route path="/statistics" element={<Statistics />} />
         </Routes>
       </main>
       </div>

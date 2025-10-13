@@ -1,0 +1,262 @@
+.option-manage-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.option-manage-modal {
+  background-color: #1a1a1a;
+  border-radius: 12px;
+  max-width: 900px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 30px;
+  border-bottom: 1px solid #333;
+}
+
+.modal-header h2 {
+  color: #ffffff;
+  font-size: 24px;
+  margin: 0;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 32px;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-btn:hover {
+  color: #999;
+}
+
+.modal-body {
+  padding: 30px;
+}
+
+.category-selector {
+  margin-bottom: 30px;
+}
+
+.category-selector label {
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 500;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.radio-buttons {
+  display: flex;
+  gap: 20px;
+}
+
+.radio-buttons label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: normal;
+  cursor: pointer;
+}
+
+.radio-buttons input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #007bff;
+  cursor: pointer;
+}
+
+.add-form {
+  background-color: #222;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 30px;
+}
+
+.add-form h3 {
+  color: #ffffff;
+  font-size: 18px;
+  margin: 0 0 15px 0;
+}
+
+.input-row {
+  display: flex;
+  gap: 10px;
+}
+
+.input-row input {
+  flex: 1;
+  padding: 12px 15px;
+  background-color: #1a1a1a;
+  border: 1px solid #444;
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 14px;
+}
+
+.input-row input:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+.add-btn {
+  padding: 12px 24px;
+  background-color: #000000;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.3s;
+}
+
+.add-btn:hover {
+  background-color: #333;
+}
+
+.add-btn:disabled {
+  background-color: #444;
+  cursor: not-allowed;
+}
+
+.options-list {
+  margin-top: 30px;
+}
+
+.options-list h3 {
+  color: #ffffff;
+  font-size: 18px;
+  margin: 0 0 15px 0;
+}
+
+.empty-message {
+  color: #999;
+  text-align: center;
+  padding: 40px;
+  font-size: 14px;
+}
+
+.options-table {
+  background-color: #222;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.options-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.options-table thead {
+  background-color: #2a2a2a;
+}
+
+.options-table th {
+  padding: 15px;
+  text-align: left;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 500;
+  border-bottom: 1px solid #333;
+}
+
+.options-table td {
+  padding: 15px;
+  color: #ffffff;
+  font-size: 14px;
+  border-bottom: 1px solid #333;
+}
+
+.options-table code {
+  background-color: #1a1a1a;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  color: #4CAF50;
+}
+
+.options-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.options-table tbody tr:hover {
+  background-color: #2a2a2a;
+}
+
+.delete-btn {
+  padding: 6px 12px;
+  background-color: #dc3545;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.delete-btn:hover {
+  background-color: #c82333;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .option-manage-modal {
+    max-width: 100%;
+    margin: 0;
+    border-radius: 0;
+    max-height: 100vh;
+  }
+
+  .modal-header {
+    padding: 15px 20px;
+  }
+
+  .modal-header h2 {
+    font-size: 20px;
+  }
+
+  .modal-body {
+    padding: 20px;
+  }
+
+  .input-row {
+    flex-direction: column;
+  }
+
+  .options-table {
+    overflow-x: auto;
+  }
+
+  .options-table table {
+    min-width: 600px;
+  }
+}
+

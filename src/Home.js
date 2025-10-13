@@ -39,6 +39,7 @@ function Home() {
   const featuresRef = useRef([]);
   const [popup, setPopup] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   // 임시: 관리자인 경우 true로 가정
   const isAdmin = true;
@@ -50,6 +51,7 @@ function Home() {
   const [btn2, setBtn2] = useState('프로그램 보기');
   const [btn1Link, setBtn1Link] = useState('');
   const [btn2Link, setBtn2Link] = useState('');
+  const [snsLink, setSnsLink] = useState('https://www.instagram.com/digitalcanvas_knuh/');
   const [editMode, setEditMode] = useState(false);
 
   // 임시 저장용
@@ -59,6 +61,7 @@ function Home() {
   const [editBtn2, setEditBtn2] = useState('');
   const [editBtn1Link, setEditBtn1Link] = useState('');
   const [editBtn2Link, setEditBtn2Link] = useState('');
+  const [editSnsLink, setEditSnsLink] = useState('');
   const [editContent, setEditContent] = useState('');
 
   // 이미지 상태 추가
@@ -96,15 +99,33 @@ function Home() {
 
   const fetchActivePopup = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/popups/active');
-      if (response.ok) {
-        const data = await response.json();
-        if (data && data._id) {
-          const hasClosedToday = localStorage.getItem(`popup_closed_${data._id}`);
-          if (!hasClosedToday) {
-            setPopup(data);
-            setShowPopup(true);
-          }
+      const response = await api.get('/api/popups/active');
+      const data = response.data;
+      console.log('Loaded popup:', data);
+      
+      // imageUrl과 imageUrls를 합치기
+      if (data && data._id) {
+        const allImages = [];
+        if (data.imageUrl) {
+          allImages.push(data.imageUrl);
+        }
+        if (data.imageUrls && data.imageUrls.length > 0) {
+          allImages.push(...data.imageUrls);
+        }
+        
+        // 합쳐진 이미지 배열을 imageUrls로 설정
+        const mergedData = {
+          ...data,
+          imageUrls: allImages.length > 0 ? allImages : data.imageUrls
+        };
+        
+        console.log('Merged images:', allImages);
+        
+        const hasClosedToday = localStorage.getItem(`popup_closed_${data._id}`);
+        if (!hasClosedToday) {
+          setPopup(mergedData);
+          setShowPopup(true);
+          setCurrentImageIndex(0); // 인덱스 초기화
         }
       }
     } catch (error) {
@@ -172,6 +193,7 @@ function Home() {
       setBtn2(about.btn2 || '프로그램 보기');
       setBtn1Link(about.btn1Link || '');
       setBtn2Link(about.btn2Link || '');
+      setSnsLink(about.snsLink || 'https://www.instagram.com/digitalcanvas_knuh/');
       setMainImage(about.mainImage || 'http://nodetree.cafe24.com/%B5%F0%C1%F6%C5%D0%B5%B5%C8%AD%BC%AD/main.png');
     }
   }, [about]);
@@ -197,6 +219,7 @@ function Home() {
     setEditBtn2(btn2);
     setEditBtn1Link(btn1Link);
     setEditBtn2Link(btn2Link);
+    setEditSnsLink(snsLink);
     setEditContent(about.content || '');
     setEditMainImage(mainImage || '');
     if (editor) {
@@ -216,6 +239,7 @@ function Home() {
         btn2: editBtn2,
         btn1Link: editBtn1Link,
         btn2Link: editBtn2Link,
+        snsLink: editSnsLink,
         mainImage: editMainImage,
         content: htmlContent,
       };
@@ -248,11 +272,62 @@ function Home() {
           <div className="popup-modal" onClick={(e) => e.stopPropagation()}>
             <button className="popup-close" onClick={() => closePopup(false)}>×</button>
             <h2 className="popup-title">{popup.title}</h2>
-            {popup.imageUrl && (
+            
+            {/* 여러 이미지 슬라이드 */}
+            {((popup.imageUrls && popup.imageUrls.length > 0) || popup.imageUrl) && (
               <div className="popup-image-wrapper">
-                <img src={popup.imageUrl} alt={popup.title} className="popup-image" />
+                {popup.imageUrls && popup.imageUrls.length > 0 ? (
+                  <>
+                    <img 
+                      src={popup.imageUrls[currentImageIndex]} 
+                      alt={`${popup.title} ${currentImageIndex + 1}`} 
+                      className="popup-image"
+                      onError={(e) => {
+                        console.error('Image load error:', popup.imageUrls[currentImageIndex]);
+                        e.target.style.display = 'none';
+                      }}
+                    />
+                    {popup.imageUrls.length > 1 && (
+                      <>
+                        <button 
+                          className="popup-image-prev" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setCurrentImageIndex((prev) => 
+                              prev === 0 ? popup.imageUrls.length - 1 : prev - 1
+                            );
+                          }}
+                        >
+                          ◀
+                        </button>
+                        <button 
+                          className="popup-image-next" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setCurrentImageIndex((prev) => 
+                              prev === popup.imageUrls.length - 1 ? 0 : prev + 1
+                            );
+                          }}
+                        >
+                          ▶
+                        </button>
+                        <div className="popup-image-indicator">
+                          {currentImageIndex + 1} / {popup.imageUrls.length}
+                        </div>
+                      </>
+                    )}
+                    {popup.imageUrls.length === 1 && (
+                      <div className="popup-image-indicator">
+                        1 / 1
+                      </div>
+                    )}
+                  </>
+                ) : popup.imageUrl && (
+                  <img src={popup.imageUrl} alt={popup.title} className="popup-image" />
+                )}
               </div>
             )}
+            
             <div className="popup-message">{popup.message}</div>
             <div className="popup-actions">
               <button className="popup-btn-today" onClick={() => closePopup(true)}>
@@ -296,6 +371,9 @@ function Home() {
                       <input className="edit-input btn" value={editBtn2} onChange={e => setEditBtn2(e.target.value)} placeholder="프로그램 보기 텍스트" />
                       <input className="edit-input btn-link" value={editBtn2Link} onChange={e => setEditBtn2Link(e.target.value)} placeholder="프로그램 보기 링크" style={{width:180}} />
                     </div>
+                    <div style={{display:'flex', gap:'0.5rem', alignItems:'center'}}>
+                      <input className="edit-input btn-link" value={editSnsLink} onChange={e => setEditSnsLink(e.target.value)} placeholder="SNS 링크 (인스타그램 등)" style={{width:'100%', minWidth: 300}} />
+                    </div>
                   </div>
                 </div>
                 <div className="edit-btn-row">
@@ -323,6 +401,16 @@ function Home() {
                     <a href={btn2Link} target="_blank" rel="noopener noreferrer" className="apple-btn outline">{btn2}</a>
                   ) : (
                     <button className="apple-btn outline">{btn2}</button>
+                  )}
+                  {snsLink && (
+                    <a 
+                      href={snsLink} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="apple-btn sns-btn"
+                    >
+                      SNS 바로가기
+                    </a>
                   )}
                 </div>
               </>
