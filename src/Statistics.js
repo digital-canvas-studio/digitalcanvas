@@ -9,6 +9,8 @@ function Statistics() {
   const [schedules, setSchedules] = useState([]);
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [statistics, setStatistics] = useState({});
+  const [showSpaceDetail, setShowSpaceDetail] = useState(false);
+  const [spaceDetailStats, setSpaceDetailStats] = useState({});
 
   useEffect(() => {
     if (!token) {
@@ -161,6 +163,66 @@ function Statistics() {
     setSelectedMonth(new Date());
   };
 
+  // 공간 value를 label로 변환하는 맵핑
+  const getSpaceLabel = (value) => {
+    const spaceMap = {
+      'emeral-room-01': '이메리얼룸01',
+      'emeral-room-02': '이메리얼룸02',
+      'creative-workshop': '창작방앗간',
+      'coexistence': '공존',
+      'closed': '휴관'
+    };
+    return spaceMap[value] || value;
+  };
+
+  // 공간별 상세 통계 계산
+  const calculateSpaceDetails = () => {
+    const year = selectedMonth.getFullYear();
+    const month = selectedMonth.getMonth();
+
+    const monthSchedules = schedules.filter(schedule => {
+      const scheduleDate = new Date(schedule.start);
+      return scheduleDate.getFullYear() === year && scheduleDate.getMonth() === month;
+    });
+
+    const spaceStats = {};
+
+    monthSchedules.forEach(schedule => {
+      const scheduleDate = new Date(schedule.start);
+      const weekNumber = getWeekOfMonth(scheduleDate);
+      const weekKey = `week${weekNumber}`;
+
+      let details = {};
+      try {
+        details = JSON.parse(schedule.notes || '{}');
+      } catch (e) {
+        details = {};
+      }
+
+      // 공간 목록 추출
+      let spaces = [];
+      if (details.spaceTypes && details.spaceTypes.length > 0) {
+        spaces = details.spaceTypes;
+      } else if (schedule.spaces && schedule.spaces.length > 0) {
+        spaces = schedule.spaces.filter(s => s !== '휴관' && s !== 'closed');
+      }
+
+      // 각 공간별 카운트 (한글 이름으로 변환)
+      spaces.forEach(spaceName => {
+        const displayName = getSpaceLabel(spaceName);
+        if (!spaceStats[displayName]) {
+          spaceStats[displayName] = {
+            week1: 0, week2: 0, week3: 0, week4: 0, week5: 0
+          };
+        }
+        spaceStats[displayName][weekKey]++;
+      });
+    });
+
+    setSpaceDetailStats(spaceStats);
+    setShowSpaceDetail(true);
+  };
+
   const total = getTotalCounts();
 
   return (
@@ -199,7 +261,7 @@ function Statistics() {
               return (
                 <tr key={week}>
                   <td className="week-cell">{week}주차</td>
-                  <td>{weekData.space}</td>
+                  <td className="clickable-cell" onClick={calculateSpaceDetails}>{weekData.space}</td>
                   <td>{weekData.equipment}</td>
                   <td>{weekData.printer3d}</td>
                   <td>{weekData.laser}</td>
@@ -211,7 +273,7 @@ function Statistics() {
           <tfoot>
             <tr className="total-row">
               <td>총 예약 건수</td>
-              <td>{total.space}</td>
+              <td className="clickable-cell" onClick={calculateSpaceDetails}>{total.space}</td>
               <td>{total.equipment}</td>
               <td>{total.printer3d}</td>
               <td>{total.laser}</td>
@@ -220,6 +282,51 @@ function Statistics() {
           </tfoot>
         </table>
       </div>
+
+      {/* 공간별 상세 통계 모달 */}
+      {showSpaceDetail && (
+        <div className="modal-overlay" onClick={() => setShowSpaceDetail(false)}>
+          <div className="modal-container" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>공간별 예약 실적</h2>
+              <button className="close-btn" onClick={() => setShowSpaceDetail(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <table className="detail-table">
+                <thead>
+                  <tr>
+                    <th>공간명</th>
+                    <th>1주차</th>
+                    <th>2주차</th>
+                    <th>3주차</th>
+                    <th>4주차</th>
+                    <th>5주차</th>
+                    <th>합계</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.keys(spaceDetailStats).sort().map(spaceName => {
+                    const spaceData = spaceDetailStats[spaceName];
+                    const spaceTotal = spaceData.week1 + spaceData.week2 + spaceData.week3 + spaceData.week4 + spaceData.week5;
+                    
+                    return (
+                      <tr key={spaceName}>
+                        <td className="space-name-cell">{spaceName}</td>
+                        <td>{spaceData.week1}</td>
+                        <td>{spaceData.week2}</td>
+                        <td>{spaceData.week3}</td>
+                        <td>{spaceData.week4}</td>
+                        <td>{spaceData.week5}</td>
+                        <td className="total-cell">{spaceTotal}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
