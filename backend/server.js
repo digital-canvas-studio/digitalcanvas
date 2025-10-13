@@ -22,7 +22,8 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 // Middleware
 const allowedOrigins = [
   'http://localhost:3000',
-  'https://www.knuh-ditdo.kr'
+  'https://www.knuh-ditdo.kr',
+  'https://digitalcanvas.onrender.com' // Render 프론트엔드 배포 URL
 ];
 
 if (process.env.FRONTEND_URL && !allowedOrigins.includes(process.env.FRONTEND_URL)) {
@@ -38,9 +39,11 @@ app.use(cors({
     }
     
     // 프로덕션에서는 허용된 origin만 허용
+    // origin이 없는 경우(서버 간 통신 등)도 허용
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
+      console.log('CORS blocked origin:', origin);
       callback(new Error('Not allowed by CORS'));
     }
   },
