@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthContext from './context/AuthContext';
+import api from './api';
 import './PopupManage.css';
 
 function PopupManage() {
@@ -21,10 +22,8 @@ function PopupManage() {
 
   const fetchPopups = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/popups');
-      if (!response.ok) throw new Error('팝업 목록을 불러오는데 실패했습니다.');
-      const data = await response.json();
-      setPopups(data);
+      const response = await api.get('/api/popups');
+      setPopups(response.data);
       setLoading(false);
     } catch (err) {
       setError(err.message);
@@ -36,16 +35,7 @@ function PopupManage() {
     if (!window.confirm('정말 삭제하시겠습니까?')) return;
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3001/api/popups/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (!response.ok) throw new Error('삭제에 실패했습니다.');
-      
+      await api.delete(`/api/popups/${id}`);
       alert('삭제되었습니다.');
       fetchPopups();
     } catch (err) {
@@ -55,18 +45,7 @@ function PopupManage() {
 
   const toggleActive = async (id, currentStatus) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3001/api/popups/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ isActive: !currentStatus })
-      });
-
-      if (!response.ok) throw new Error('상태 변경에 실패했습니다.');
-      
+      await api.put(`/api/popups/${id}`, { isActive: !currentStatus });
       fetchPopups();
     } catch (err) {
       alert(err.message);

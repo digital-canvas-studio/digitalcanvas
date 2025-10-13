@@ -93,14 +93,14 @@ const ReservationForm = ({ onAddEvent }) => {
     const fetchOptions = async () => {
       try {
         const [spaceRes, equipRes, makerRes] = await Promise.all([
-          fetch('http://localhost:3001/api/reservation-options?category=space'),
-          fetch('http://localhost:3001/api/reservation-options?category=equipment'),
-          fetch('http://localhost:3001/api/reservation-options?category=makerspace')
+          api.get('/api/reservation-options?category=space'),
+          api.get('/api/reservation-options?category=equipment'),
+          api.get('/api/reservation-options?category=makerspace')
         ]);
 
-        const spaceData = await spaceRes.json();
-        const equipData = await equipRes.json();
-        const makerData = await makerRes.json();
+        const spaceData = spaceRes.data;
+        const equipData = equipRes.data;
+        const makerData = makerRes.data;
 
         const mergeOptions = (dbOptions, defaultOptions) => {
           const merged = [...defaultOptions];

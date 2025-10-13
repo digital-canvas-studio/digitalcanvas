@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthContext from './context/AuthContext';
+import api from './api';
 import './ReservationOptionManage.css';
 
 function ReservationOptionManage({ onClose }) {
@@ -22,8 +23,8 @@ function ReservationOptionManage({ onClose }) {
 
   const fetchOptions = async () => {
     try {
-      const response = await fetch(`http://localhost:3001/api/reservation-options?category=${category}`);
-      const data = await response.json();
+      const response = await api.get(`/api/reservation-options?category=${category}`);
+      const data = response.data;
       // 이름순으로 정렬
       const sortedData = data.sort((a, b) => a.label.localeCompare(b.label, 'ko-KR'));
       setOptions(sortedData);
@@ -47,32 +48,20 @@ function ReservationOptionManage({ onClose }) {
 
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
       const value = generateValue(newLabel);
       
-      const response = await fetch('http://localhost:3001/api/reservation-options', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          value: value,
-          label: newLabel.trim(),
-          category
-        })
+      await api.post('/api/reservation-options', {
+        value: value,
+        label: newLabel.trim(),
+        category
       });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || '추가에 실패했습니다.');
-      }
 
       alert('항목이 추가되었습니다.');
       setNewLabel('');
       fetchOptions();
     } catch (error) {
-      alert(error.message);
+      const errorMessage = error.response?.data?.error || error.message || '추가에 실패했습니다.';
+      alert(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -89,18 +78,7 @@ function ReservationOptionManage({ onClose }) {
     }
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3001/api/reservation-options/${option._id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('삭제에 실패했습니다.');
-      }
-
+      await api.delete(`/api/reservation-options/${option._id}`);
       alert('항목이 삭제되었습니다.');
       fetchOptions();
     } catch (error) {

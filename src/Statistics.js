@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthContext from './context/AuthContext';
+import api from './api';
 import './Statistics.css';
 
 function Statistics() {
@@ -26,8 +27,8 @@ function Statistics() {
 
   const fetchSchedules = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/schedules');
-      const data = await response.json();
+      const response = await api.get('/api/schedules');
+      const data = response.data;
       setSchedules(data);
       calculateStatistics(data);
     } catch (error) {
