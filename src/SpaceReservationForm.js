@@ -185,6 +185,32 @@ function SpaceReservationForm({ onClose, onReservationAdded }) {
       return;
     }
 
+    // 메이커스페이스 사용 시간 제한 확인
+    if (formData.makerSpaceTypes.length > 0) {
+      const [startHour, startMinute] = formData.startTime.split(':').map(Number);
+      const [endHour, endMinute] = formData.endTime.split(':').map(Number);
+      const durationMinutes = (endHour * 60 + endMinute) - (startHour * 60 + startMinute);
+      const durationHours = durationMinutes / 60;
+
+      // 3D프린터 시간 제한 (4시간)
+      const has3dPrinter = formData.makerSpaceTypes.some(type => 
+        type.includes('3d-printer') || type.includes('printer')
+      );
+      if (has3dPrinter && durationHours > 4) {
+        alert('3D프린터는 1회당 최대 4시간까지 신청 가능합니다.');
+        return;
+      }
+
+      // 레이저각인기 시간 제한 (2시간)
+      const hasLaser = formData.makerSpaceTypes.some(type => 
+        type.includes('laser') || type.includes('engraver')
+      );
+      if (hasLaser && durationHours > 2) {
+        alert('레이저각인기는 1회당 최대 2시간까지 신청 가능합니다.');
+        return;
+      }
+    }
+
     // 주말(토요일, 일요일) 확인
     const requestDate = new Date(formData.reservationDate);
     const dayOfWeek = requestDate.getDay(); // 0: 일요일, 6: 토요일
