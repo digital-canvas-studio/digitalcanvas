@@ -141,13 +141,26 @@
   }
 
   .statistics-table-container {
-    padding: 15px;
+    padding: 10px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .statistics-table {
+    min-width: 600px;
+    font-size: 13px;
   }
 
   .statistics-table th,
   .statistics-table td {
-    padding: 10px 5px;
+    padding: 10px 8px;
     font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .statistics-table tbody td {
+    font-size: 14px;
+    font-weight: 600;
   }
 
   .month-btn,
@@ -155,17 +168,43 @@
     padding: 8px 15px;
     font-size: 13px;
   }
+
+  .total-row td {
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .grand-total {
+    font-size: 16px;
+  }
 }
 
 @media (max-width: 480px) {
+  .statistics-table {
+    min-width: 550px;
+  }
+
   .statistics-table th,
   .statistics-table td {
-    padding: 8px 3px;
+    padding: 8px 5px;
     font-size: 12px;
   }
 
+  .statistics-table tbody td {
+    font-size: 13px;
+    font-weight: 600;
+  }
+
   .page-header h1 {
-    font-size: 24px;
+    font-size: 22px;
+  }
+
+  .total-row td {
+    font-size: 13px;
+  }
+
+  .grand-total {
+    font-size: 15px;
   }
 }
 
