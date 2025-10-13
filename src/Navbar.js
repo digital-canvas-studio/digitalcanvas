@@ -43,6 +43,15 @@ function Navbar() {
         <li><Link to="/reservation" onClick={closeMenu}>예약/신청</Link></li>
         <li><Link to="/location" onClick={closeMenu}>위치</Link></li>
         {token && <li><Link to="/popup/manage" onClick={closeMenu}>팝업관리</Link></li>}
+        {isMenuOpen && (
+          <li className="navbar-login-mobile">
+            {token ? (
+              <button onClick={handleLogout} className="navbar-login-btn">로그아웃</button>
+            ) : (
+              <Link to="/login" onClick={closeMenu} className="navbar-login-btn">로그인</Link>
+            )}
+          </li>
+        )}
       </ul>
       <div className="navbar-login-desktop">
         {token ? (

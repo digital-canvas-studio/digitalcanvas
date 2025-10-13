@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import './PostDetail.css';
+import api from './api';
 
 function ProgramDetail() {
   const [program, setProgram] = useState(null);
@@ -10,12 +11,11 @@ function ProgramDetail() {
   useEffect(() => {
     const fetchProgram = async () => {
       try {
-        const response = await fetch(`/api/programs/${id}`);
-        if (!response.ok) throw new Error('Program not found');
-        const data = await response.json();
-        setProgram(data);
+        const response = await api.get(`/api/programs/${id}`);
+        setProgram(response.data);
       } catch (error) {
         console.error("Error fetching program:", error);
+        alert('프로그램 정보를 불러오는데 실패했습니다.');
         navigate('/program');
       }
     };
@@ -25,11 +25,12 @@ function ProgramDetail() {
   const handleDelete = async () => {
     if (window.confirm('정말로 이 프로그램을 삭제하시겠습니까?')) {
       try {
-        await fetch(`/api/programs/${id}`, { method: 'DELETE' });
-    alert('프로그램이 삭제되었습니다.');
-    navigate('/program');
+        await api.delete(`/api/programs/${id}`);
+        alert('프로그램이 삭제되었습니다.');
+        navigate('/program');
       } catch (error) {
         alert('삭제에 실패했습니다.');
+        console.error("Error deleting program:", error);
       }
     }
   };

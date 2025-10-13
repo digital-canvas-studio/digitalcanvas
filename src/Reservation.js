@@ -5,6 +5,7 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import './Reservation.css';
 import AuthContext from './context/AuthContext';
+import api from './api';
 
 const renderEventContent = (eventInfo) => {
   const { view, event } = eventInfo;
@@ -47,7 +48,6 @@ const ReservationForm = ({ onAddEvent }) => {
   const [date, setDate] = useState('');
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
-  const { token } = useContext(AuthContext);
 
   const [availableSpaces, setAvailableSpaces] = useState([]);
   const availableEquipment = [
@@ -58,7 +58,8 @@ const ReservationForm = ({ onAddEvent }) => {
     '줌 사운드 레코더',
     '현장답사용 마이크리시버',
     '3D프린터',
-    '레이저각인기'
+    '레이저각인기',
+    '노트북' // 추가
   ];
 
   const timeOptions = generateTimeOptions();
@@ -66,9 +67,9 @@ const ReservationForm = ({ onAddEvent }) => {
   useEffect(() => {
     const fetchSpaces = async () => {
       try {
-        const response = await fetch('/api/spaces');
-        const data = await response.json();
-        setAvailableSpaces(data);
+        const response = await api.get('/api/spaces');
+        // 휴관 항목을 수동으로 추가
+        setAvailableSpaces([...response.data, { _id: 'closed', title: '휴관' }]);
       } catch (error) {
         console.error("Error fetching spaces:", error);
       }
@@ -103,12 +104,6 @@ const ReservationForm = ({ onAddEvent }) => {
     }
 
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        alert('로그인이 필요합니다.');
-        return;
-      }
-
       // 제목 생성
       const titleParts = [];
       if (selectedSpaces.length > 0) {
@@ -139,21 +134,9 @@ const ReservationForm = ({ onAddEvent }) => {
         notes
       };
 
-      const response = await fetch('/api/schedules', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(reservationData)
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || '예약 생성에 실패했습니다.');
-      }
+      const response = await api.post('/api/schedules', reservationData);
       
-      const savedReservation = await response.json();
+      const savedReservation = response.data;
       onAddEvent(savedReservation);
 
       // 폼 초기화
@@ -165,7 +148,8 @@ const ReservationForm = ({ onAddEvent }) => {
       alert('예약이 성공적으로 등록되었습니다.');
     } catch (error) {
       console.error('Error creating reservation:', error);
-      alert(error.message);
+      const errorMessage = error.response?.data?.error || '예약 생성에 실패했습니다.';
+      alert(errorMessage);
     }
   };
 
@@ -234,14 +218,31 @@ function Reservation() {
     return window.innerWidth <= 768 ? 'timeGridFourDay' : 'timeGridWeek';
   };
 
+  // 랜덤 색상 생성 함수
+  const getRandomColor = () => {
+    const colors = [
+      '#3498db', // 파랑
+      '#e74c3c', // 빨강
+      '#f1c40f', // 노랑
+      '#2ecc71', // 초록
+      '#9b59b6', // 보라
+      '#1abc9c', // 청록
+      '#e67e22', // 주황
+      '#34495e', // 남색
+      '#fd79a8', // 핑크
+      '#00b894', // 민트
+    ];
+    return colors[Math.floor(Math.random() * colors.length)];
+  };
+
   const formatEvent = (reservation) => ({
     id: reservation._id,
     title: reservation.title,
     start: new Date(reservation.start),
     end: new Date(reservation.end),
     allDay: false,
-    backgroundColor: reservation.type === 'space' ? '#3498db' : '#e74c3c',
-    borderColor: reservation.type === 'space' ? '#3498db' : '#e74c3c',
+    backgroundColor: reservation.type === 'space' ? getRandomColor() : getRandomColor(),
+    borderColor: reservation.type === 'space' ? '#222' : '#222',
     extendedProps: {
       type: reservation.type,
       spaces: reservation.spaces,
@@ -254,15 +255,13 @@ function Reservation() {
   useEffect(() => {
     const fetchReservations = async () => {
       try {
-        const response = await fetch('/api/schedules');
-        if (!response.ok) throw new Error('Failed to fetch reservations');
-        const data = await response.json();
-        setEvents(data.map(formatEvent));
+        const response = await api.get('/api/schedules');
+        const formattedEvents = response.data.map(formatEvent);
+        setEvents(formattedEvents);
       } catch (error) {
         console.error("Error fetching reservations:", error);
       }
     };
-
     fetchReservations();
   }, []);
   
@@ -271,33 +270,30 @@ function Reservation() {
   };
 
   const handleEventClick = async (clickInfo) => {
+    // 로그인하지 않은 사용자는 상세 정보 모달을 띄움
     if (!token) {
       setSelectedEvent(clickInfo.event);
       setIsModalOpen(true);
-    } else {
-      if (window.confirm(`'${clickInfo.event.title}' 예약을 삭제하시겠습니까?`)) {
-        try {
-          const response = await fetch(`/api/schedules/${clickInfo.event.id}`, {
-            method: 'DELETE',
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
-          if (!response.ok) {
-            if (response.status === 401 || response.status === 403) {
-              throw new Error('인증되지 않았습니다. 다시 로그인해주세요.');
-            }
-            throw new Error('예약 삭제에 실패했습니다.');
-          }
-          // UI에서 즉시 이벤트 제거
-          setEvents(prevEvents => prevEvents.filter(event => event.id !== clickInfo.event.id));
-          alert('예약이 삭제되었습니다.');
-        } catch (error) {
-          console.error('Error deleting reservation:', error);
-          alert(error.message);
-        }
+      return;
+    }
+
+    // 로그인한 사용자는 삭제 여부를 물음
+    if (window.confirm(`'${clickInfo.event.title}' 예약을 삭제하시겠습니까?`)) {
+      try {
+        await api.delete(`/api/schedules/${clickInfo.event.id}`);
+        // UI에서 이벤트 제거
+        clickInfo.event.remove();
+        alert('예약이 삭제되었습니다.');
+      } catch (error) {
+        console.error('Error deleting reservation:', error);
+        alert(error.response?.data?.error || '예약 삭제에 실패했습니다.');
       }
     }
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedEvent(null);
   };
 
   return (
@@ -310,6 +306,12 @@ function Reservation() {
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
         initialView={getInitialView()}
         views={{
+          timeGridWeek: {
+            buttonText: '주',
+          },
+          dayGridMonth: {
+            buttonText: '월',
+          },
           timeGridFourDay: {
             type: 'timeGrid',
             duration: { days: 4 },
@@ -340,13 +342,13 @@ function Reservation() {
       {token && <ReservationForm onAddEvent={handleAddEvent} />}
 
       {isModalOpen && selectedEvent && (
-        <div className="modal-overlay">
-          <div className="modal-content">
+        <div className="modal-backdrop" onClick={closeModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h3>예약 상세 정보</h3>
             <p><strong>날짜:</strong> {selectedEvent.start.toLocaleDateString('ko-KR')}</p>
             <p><strong>시간대:</strong> {selectedEvent.start.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })} - {selectedEvent.end.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}</p>
             <p><strong>예약내용:</strong> {selectedEvent.title}</p>
-            <button onClick={() => setIsModalOpen(false)}>닫기</button>
+            <button onClick={closeModal}>닫기</button>
           </div>
         </div>
       )}

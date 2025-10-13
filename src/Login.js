@@ -2,6 +2,7 @@ import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Login.css';
 import AuthContext from './context/AuthContext';
+import api from './api'; // api 모듈 임포트
 
 function Login() {
   const [username, setUsername] = useState('');
@@ -19,25 +20,23 @@ function Login() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
+      // const response = await fetch('/api/login', { ... });
+      const response = await api.post('/api/login', { username, password });
+      
+      const data = response.data;
 
-      const data = await response.json();
+      // 로그인 성공 - 토큰과 사용자 정보 저장
+      login(data.token, data.user);
+      alert('로그인 성공!');
+      navigate('/');
 
-      if (response.ok) {
-        // 로그인 성공 - 토큰과 사용자 정보 저장
-        login(data.token, data.user);
-        alert('로그인 성공!');
-        navigate('/');
-      } else {
-        setError(data.error || '로그인에 실패했습니다.');
-      }
     } catch (err) {
       console.error('Login error:', err);
-      setError('서버에 연결할 수 없습니다.');
+      if (err.response && err.response.data && err.response.data.error) {
+        setError(err.response.data.error);
+      } else {
+        setError('서버에 연결할 수 없습니다.');
+      }
     } finally {
       setIsLoading(false);
     }

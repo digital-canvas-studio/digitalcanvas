@@ -3,11 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
-import Bold from '@tiptap/extension-bold';
-import Italic from '@tiptap/extension-italic';
-import Heading from '@tiptap/extension-heading';
 import Placeholder from '@tiptap/extension-placeholder';
 import './HomeEdit.css';
+import api from './api';
 
 const MenuBar = ({ editor, onImageInsertClick }) => {
   if (!editor) return null;
@@ -33,11 +31,9 @@ function ProgramEdit() {
     extensions: [
       StarterKit.configure({
         hardBreak: false,
+        heading: { levels: [1, 2] },
       }),
       Image,
-      Bold,
-      Italic,
-      Heading.configure({ levels: [1, 2] }),
       Placeholder.configure({ placeholder: '프로그램 상세 내용을 입력하세요...' }),
     ],
     content: '',
@@ -47,11 +43,13 @@ function ProgramEdit() {
     if (!id || !editor) return;
     const fetchProgram = async () => {
       try {
-        const response = await fetch(`/api/programs/${id}`);
-        const data = await response.json();
+        const response = await api.get(`/api/programs/${id}`);
+        const data = response.data;
         setProgramData({ title: data.title, thumbnailUrl: data.thumbnailUrl });
         editor.commands.setContent(data.content);
       } catch (error) {
+        console.error("Error fetching program:", error);
+        alert('프로그램 정보를 불러오는데 실패했습니다.');
         navigate('/program');
       }
     };
@@ -67,14 +65,12 @@ function ProgramEdit() {
     e.preventDefault();
     if (!editor) return;
     try {
-      await fetch(`/api/programs/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...programData, content: editor.getHTML() }),
-      });
+      const payload = { ...programData, content: editor.getHTML() };
+      await api.put(`/api/programs/${id}`, payload);
       alert('프로그램이 수정되었습니다.');
       navigate(`/program/${id}`);
     } catch (error) {
+      console.error("Error updating program:", error);
       alert('수정에 실패했습니다.');
     }
   };

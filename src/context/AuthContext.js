@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
+import api from '../api';
 
 const AuthContext = createContext();
 
@@ -11,22 +12,15 @@ export const AuthProvider = ({ children }) => {
     const fetchUser = async () => {
       if (token) {
         try {
-          const response = await fetch('/api/user/profile', {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
-          if (response.ok) {
-            const userData = await response.json();
-            setUser(userData);
-            localStorage.setItem('user', JSON.stringify(userData));
-          } else {
-            // Token might be invalid/expired
-            logout();
-          }
+          const response = await api.get('/api/user/profile');
+          const userData = response.data;
+          setUser(userData);
+          localStorage.setItem('user', JSON.stringify(userData));
         } catch (error) {
           console.error('Failed to fetch user', error);
-          logout();
+          if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+            logout();
+          }
         }
       }
       setIsLoading(false);

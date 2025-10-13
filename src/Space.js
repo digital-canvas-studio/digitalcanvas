@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import './Space.css';
+import api from './api';
 
 function Space() {
   const [spaces, setSpaces] = useState([]);
@@ -8,17 +9,19 @@ function Space() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch('/api/spaces')
-      .then(res => res.json())
-      .then(data => {
-        setSpaces(data);
-        setLoading(false);
-      })
-      .catch(err => {
+    const fetchSpaces = async () => {
+      try {
+        const response = await api.get('/api/spaces');
+        setSpaces(response.data);
+      } catch (err) {
         console.error("Error fetching spaces:", err);
         setError(err);
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+
+    fetchSpaces();
   }, []);
 
   if (loading) return <div className="page-container">Loading...</div>;

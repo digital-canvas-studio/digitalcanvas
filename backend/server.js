@@ -8,22 +8,46 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Redirect www to naked domain
+app.use((req, res, next) => {
+  if (req.headers.host === 'knuh-ditdo.kr') {
+    return res.redirect(301, 'https://www.knuh-ditdo.kr' + req.originalUrl);
+  }
+  next();
+});
+
 // JWT Secret (환경변수에서 가져오거나 기본값 사용)
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 // Middleware
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://www.knuh-ditdo.kr'
+];
+
+if (process.env.FRONTEND_URL && !allowedOrigins.includes(process.env.FRONTEND_URL)) {
+  allowedOrigins.push(process.env.FRONTEND_URL);
+}
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 app.use(express.json());
 
-// MongoDB Connection
+// MongoDB Connection (with connection pool)
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
+  maxPoolSize: 10, // 동시에 최대 10개 커넥션 유지
 })
-.then(() => console.log('Successfully connected to MongoDB'))
+.then(() => console.log('Successfully connected to MongoDB (with connection pool)'))
 .catch(err => console.error('Could not connect to MongoDB', err));
 
 // Health check endpoint
@@ -753,24 +777,6 @@ app.post('/api/schedules', authenticateToken, async (req, res) => {
     
     if (startDate >= endDate) {
       return res.status(400).json({ error: 'End time must be after start time' });
-    }
-
-    // 겹치는 예약 확인
-    const conflictingSchedule = await Schedule.findOne({
-      $and: [
-        {
-          $or: [
-            { start: { $lt: endDate, $gte: startDate } },
-            { end: { $gt: startDate, $lte: endDate } },
-            { start: { $lte: startDate }, end: { $gte: endDate } }
-          ]
-        },
-        { status: { $ne: 'cancelled' } }
-      ]
-    });
-
-    if (conflictingSchedule) {
-      return res.status(409).json({ error: 'Time slot is already booked' });
     }
 
     const newSchedule = new Schedule({
