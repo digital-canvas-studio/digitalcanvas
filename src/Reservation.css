@@ -517,4 +517,124 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* 최근 예약 리스트 스타일 */
+.recent-reservations-container {
+  margin: 30px 0;
+  padding: 20px;
+  background-color: #1a1a1a;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.recent-reservations-container h2 {
+  color: #ffffff;
+  font-size: 1.5rem;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #333;
+}
+
+.recent-reservations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.recent-reservation-item {
+  display: flex;
+  gap: 15px;
+  padding: 15px;
+  background-color: #2a2a2a;
+  border-radius: 8px;
+  border-left: 4px solid #4CAF50;
+  transition: all 0.3s ease;
+}
+
+.recent-reservation-item:hover {
+  background-color: #333;
+  transform: translateX(5px);
+}
+
+.recent-item-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 35px;
+  height: 35px;
+  background-color: #4CAF50;
+  color: white;
+  font-weight: bold;
+  border-radius: 50%;
+  font-size: 0.9rem;
+}
+
+.recent-item-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.recent-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.recent-item-date {
+  color: #aaa;
+  font-size: 0.9rem;
+}
+
+.recent-item-created {
+  color: #888;
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+.recent-item-info {
+  color: #ffffff;
+  font-size: 1rem;
+}
+
+.recent-item-info strong {
+  color: #4CAF50;
+  font-size: 1.1rem;
+}
+
+.recent-item-details {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.recent-item-tag {
+  display: inline-block;
+  padding: 4px 10px;
+  background-color: #444;
+  color: #fff;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.recent-item-contact {
+  color: #888;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 768px) {
+  .recent-reservations-container {
+    padding: 15px;
+  }
+  
+  .recent-reservation-item {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .recent-item-number {
+    align-self: flex-start;
+  }
 } 

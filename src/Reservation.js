@@ -397,6 +397,7 @@ function Reservation() {
   const [showOptionManage, setShowOptionManage] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showLoadingNotice, setShowLoadingNotice] = useState(true);
+  const [recentReservations, setRecentReservations] = useState([]);
 
   // 화면 너비에 따라 초기 뷰를 결정하는 함수
   const getInitialView = () => {
@@ -504,6 +505,14 @@ function Reservation() {
         const response = await api.get('/api/schedules');
         const formattedEvents = response.data.map(formatEvent);
         setEvents(formattedEvents);
+        
+        // 최근 예약 10건 저장 (생성일 기준 내림차순)
+        const sortedByCreated = [...response.data].sort((a, b) => {
+          const dateA = new Date(a.createdAt || a.start);
+          const dateB = new Date(b.createdAt || b.start);
+          return dateB - dateA;
+        });
+        setRecentReservations(sortedByCreated.slice(0, 10));
       } catch (error) {
         console.error("Error fetching reservations:", error);
       } finally {
@@ -523,6 +532,14 @@ function Reservation() {
       const response = await api.get('/api/schedules');
       const formattedEvents = response.data.map(formatEvent);
       setEvents(formattedEvents);
+      
+      // 최근 예약 10건도 업데이트
+      const sortedByCreated = [...response.data].sort((a, b) => {
+        const dateA = new Date(a.createdAt || a.start);
+        const dateB = new Date(b.createdAt || b.start);
+        return dateB - dateA;
+      });
+      setRecentReservations(sortedByCreated.slice(0, 10));
     } catch (error) {
       console.error("Error fetching reservations:", error);
     }
@@ -640,6 +657,58 @@ function Reservation() {
         eventContent={renderEventContent}
         eventClick={handleEventClick}
       />
+      
+      {token && recentReservations.length > 0 && (
+        <div className="recent-reservations-container">
+          <h2>최근 예약 10건</h2>
+          <div className="recent-reservations-list">
+            {recentReservations.map((reservation, index) => {
+              let userInfo = {};
+              try {
+                userInfo = JSON.parse(reservation.notes || '{}');
+              } catch (e) {
+                userInfo = {};
+              }
+              
+              const startDate = new Date(reservation.start);
+              const endDate = new Date(reservation.end);
+              const createdAt = reservation.createdAt ? new Date(reservation.createdAt) : null;
+              
+              return (
+                <div key={reservation._id} className="recent-reservation-item">
+                  <div className="recent-item-number">{index + 1}</div>
+                  <div className="recent-item-content">
+                    <div className="recent-item-header">
+                      <span className="recent-item-date">
+                        {startDate.toLocaleDateString('ko-KR')} {startDate.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })} - {endDate.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                      {createdAt && (
+                        <span className="recent-item-created">
+                          신청: {createdAt.toLocaleDateString('ko-KR')} {createdAt.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      )}
+                    </div>
+                    <div className="recent-item-info">
+                      <strong>{userInfo.name || '이름 없음'}</strong> | {userInfo.department || '소속 없음'}
+                    </div>
+                    <div className="recent-item-details">
+                      {reservation.spaces && reservation.spaces.length > 0 && (
+                        <span className="recent-item-tag">공간: {reservation.spaces.join(', ')}</span>
+                      )}
+                      {reservation.equipment && reservation.equipment.length > 0 && (
+                        <span className="recent-item-tag">장비: {reservation.equipment.join(', ')}</span>
+                      )}
+                    </div>
+                    {userInfo.contact && (
+                      <div className="recent-item-contact">연락처: {userInfo.contact}</div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
       
       {token && <ReservationForm onAddEvent={handleAddEvent} />}
 
