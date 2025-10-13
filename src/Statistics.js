@@ -187,6 +187,9 @@ function Statistics() {
     });
 
     const spaceStats = {};
+    
+    // 공간 항목 목록 (메이커스페이스 제외)
+    const validSpaceNames = ['이메리얼룸01', '이메리얼룸02', '창작방앗간', '공존'];
 
     monthSchedules.forEach(schedule => {
       const scheduleDate = new Date(schedule.start);
@@ -200,23 +203,44 @@ function Statistics() {
         details = {};
       }
 
-      // 공간 목록 추출
+      // 공간 목록 추출 (메이커스페이스 제외)
       let spaces = [];
       if (details.spaceTypes && details.spaceTypes.length > 0) {
-        spaces = details.spaceTypes;
+        // 새 형식: spaceTypes만 사용
+        spaces = details.spaceTypes.map(type => getSpaceLabel(type));
       } else if (schedule.spaces && schedule.spaces.length > 0) {
-        spaces = schedule.spaces.filter(s => s !== '휴관' && s !== 'closed');
+        // 기존 형식: 공간 항목만 필터링 (메이커스페이스, 장비 제외)
+        spaces = schedule.spaces.filter(s => {
+          // 휴관 제외
+          if (s === '휴관' || s === 'closed') return false;
+          // 메이커스페이스 항목 제외
+          if (s.includes('3D프린터') || s.includes('3d프린터') || 
+              s.includes('레이저각인기') || s.includes('레이저') ||
+              s.includes('printer') || s.includes('laser') || s.includes('engraver')) {
+            return false;
+          }
+          // 장비 항목 제외
+          if (s.includes('카메라') || s.includes('캠코더') || s.includes('조명') || 
+              s.includes('레코더') || s.includes('마이크') || s.includes('칠판') || 
+              s.includes('노트북')) {
+            return false;
+          }
+          return true;
+        });
       }
 
       // 각 공간별 카운트 (한글 이름으로 변환)
       spaces.forEach(spaceName => {
         const displayName = getSpaceLabel(spaceName);
-        if (!spaceStats[displayName]) {
-          spaceStats[displayName] = {
-            week1: 0, week2: 0, week3: 0, week4: 0, week5: 0
-          };
+        // 유효한 공간 이름인지 확인
+        if (validSpaceNames.includes(displayName)) {
+          if (!spaceStats[displayName]) {
+            spaceStats[displayName] = {
+              week1: 0, week2: 0, week3: 0, week4: 0, week5: 0
+            };
+          }
+          spaceStats[displayName][weekKey]++;
         }
-        spaceStats[displayName][weekKey]++;
       });
     });
 
