@@ -400,9 +400,9 @@ function SpaceReservationForm({ onClose, onReservationAdded }) {
           type.includes('laser') || type.includes('engraver')
         );
 
-        // 3D프린터 계열 2회 제한 확인
+        // 3D프린터 계열 2회 제한 확인 (동일인 기준)
         if (has3dPrinter) {
-          // 이번 주에 3D프린터 신청 횟수 계산 (각 항목을 개별 카운트)
+          // 이번 주에 동일인의 3D프린터 신청 횟수 계산 (각 항목을 개별 카운트)
           let printer3dCount = 0;
           
           existingReservations.forEach(reservation => {
@@ -413,30 +413,22 @@ function SpaceReservationForm({ onClose, onReservationAdded }) {
               return;
             }
 
-            // 3D프린터 계열 개수 카운트
-            let count = 0;
+            // 예약자 정보 확인
+            let reservationName = '';
             try {
               const notes = JSON.parse(reservation.notes || '{}');
-              if (notes.makerSpaceTypes && notes.makerSpaceTypes.length > 0) {
-                count = notes.makerSpaceTypes.filter(type => 
+              reservationName = notes.name || '';
+              
+              // 동일인인 경우에만 카운트
+              if (reservationName === formData.name && notes.makerSpaceTypes && notes.makerSpaceTypes.length > 0) {
+                const count = notes.makerSpaceTypes.filter(type => 
                   type.includes('3d-printer') || type.includes('printer')
                 ).length;
+                printer3dCount += count;
               }
             } catch (e) {
-              // 기존 형식 확인
-              if (reservation.equipment) {
-                count = reservation.equipment.filter(item => 
-                  item.includes('3D프린터') || item.includes('3d프린터')
-                ).length;
-              }
-              if (reservation.spaces) {
-                count += reservation.spaces.filter(item => 
-                  item.includes('3D프린터') || item.includes('3d프린터')
-                ).length;
-              }
+              // 기존 형식 확인 (notes가 JSON이 아닌 경우는 무시)
             }
-
-            printer3dCount += count;
           });
 
           // 현재 신청하려는 3D프린터 개수 추가
@@ -451,9 +443,9 @@ function SpaceReservationForm({ onClose, onReservationAdded }) {
           }
         }
 
-        // 레이저각인기 계열 2회 제한 확인
+        // 레이저각인기 계열 2회 제한 확인 (동일인 기준)
         if (hasLaser) {
-          // 이번 주에 레이저각인기 신청 횟수 계산 (각 항목을 개별 카운트)
+          // 이번 주에 동일인의 레이저각인기 신청 횟수 계산 (각 항목을 개별 카운트)
           let laserCount = 0;
           
           existingReservations.forEach(reservation => {
@@ -464,30 +456,22 @@ function SpaceReservationForm({ onClose, onReservationAdded }) {
               return;
             }
 
-            // 레이저각인기 계열 개수 카운트
-            let count = 0;
+            // 예약자 정보 확인
+            let reservationName = '';
             try {
               const notes = JSON.parse(reservation.notes || '{}');
-              if (notes.makerSpaceTypes && notes.makerSpaceTypes.length > 0) {
-                count = notes.makerSpaceTypes.filter(type => 
+              reservationName = notes.name || '';
+              
+              // 동일인인 경우에만 카운트
+              if (reservationName === formData.name && notes.makerSpaceTypes && notes.makerSpaceTypes.length > 0) {
+                const count = notes.makerSpaceTypes.filter(type => 
                   type.includes('laser') || type.includes('engraver')
                 ).length;
+                laserCount += count;
               }
             } catch (e) {
-              // 기존 형식 확인
-              if (reservation.equipment) {
-                count = reservation.equipment.filter(item => 
-                  item.includes('레이저각인기') || item.includes('레이저')
-                ).length;
-              }
-              if (reservation.spaces) {
-                count += reservation.spaces.filter(item => 
-                  item.includes('레이저각인기') || item.includes('레이저')
-                ).length;
-              }
+              // 기존 형식 확인 (notes가 JSON이 아닌 경우는 무시)
             }
-
-            laserCount += count;
           });
 
           // 현재 신청하려는 레이저각인기 개수 추가
