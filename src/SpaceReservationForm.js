@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import './SpaceReservationForm.css';
 import AuthContext from './context/AuthContext';
+import api from './api';
 
 function SpaceReservationForm({ onClose, onReservationAdded }) {
   const { user } = useContext(AuthContext);
@@ -52,14 +53,14 @@ function SpaceReservationForm({ onClose, onReservationAdded }) {
     const fetchOptions = async () => {
       try {
         const [spaceRes, equipRes, makerRes] = await Promise.all([
-          fetch('http://localhost:3001/api/reservation-options?category=space'),
-          fetch('http://localhost:3001/api/reservation-options?category=equipment'),
-          fetch('http://localhost:3001/api/reservation-options?category=makerspace')
+          api.get('/api/reservation-options?category=space'),
+          api.get('/api/reservation-options?category=equipment'),
+          api.get('/api/reservation-options?category=makerspace')
         ]);
 
-        const spaceData = await spaceRes.json();
-        const equipData = await equipRes.json();
-        const makerData = await makerRes.json();
+        const spaceData = spaceRes.data;
+        const equipData = equipRes.data;
+        const makerData = makerRes.data;
 
         // DB 데이터와 기본 데이터 합치기 (중복 제거)
         const mergeOptions = (dbOptions, defaultOptions) => {
@@ -226,8 +227,8 @@ function SpaceReservationForm({ onClose, onReservationAdded }) {
 
     try {
       // 기존 예약 확인
-      const checkResponse = await fetch('http://localhost:3001/api/schedules');
-      const existingReservations = await checkResponse.json();
+      const checkResponse = await api.get('/api/schedules');
+      const existingReservations = checkResponse.data;
 
       // 휴관일 체크
       const requestDate = new Date(formData.reservationDate);
@@ -360,18 +361,12 @@ function SpaceReservationForm({ onClose, onReservationAdded }) {
       // 메이커스페이스 교육 이수 여부 확인
       if (formData.makerSpaceTypes.length > 0) {
         for (const makerSpaceType of formData.makerSpaceTypes) {
-          const checkResponse = await fetch('http://localhost:3001/api/trained-users/check', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              name: formData.name,
-              equipmentType: makerSpaceType
-            })
+          const checkResponse = await api.post('/api/trained-users/check', {
+            name: formData.name,
+            equipmentType: makerSpaceType
           });
 
-          const result = await checkResponse.json();
+          const result = checkResponse.data;
           if (!result.isTrained) {
             const makerSpaceLabel = getSelectedLabel(makerSpaceOptions, makerSpaceType);
             alert(`장비교육을 이수해야합니다. (${makerSpaceLabel})`);
@@ -532,23 +527,9 @@ function SpaceReservationForm({ onClose, onReservationAdded }) {
         })
       };
 
-      const token = localStorage.getItem('token');
-      const headers = {
-        'Content-Type': 'application/json'
-      };
-      
-      // 토큰이 있으면 추가 (선택사항)
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
+      const response = await api.post('/api/schedules', reservationData);
 
-      const response = await fetch('http://localhost:3001/api/schedules', {
-        method: 'POST',
-        headers: headers,
-        body: JSON.stringify(reservationData)
-      });
-
-      if (!response.ok) {
+      if (!response.data) {
         throw new Error('예약 신청에 실패했습니다.');
       }
 
