@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthContext from './context/AuthContext';
+import api from './api';
 import './TrainedUserManage.css';
 
 function TrainedUserManage({ onClose }) {
@@ -22,9 +23,8 @@ function TrainedUserManage({ onClose }) {
 
   const fetchTrainedUsers = async () => {
     try {
-      const response = await fetch(`http://localhost:3001/api/trained-users/${equipmentType}`);
-      const data = await response.json();
-      setTrainedUsers(data);
+      const response = await api.get(`/api/trained-users/${equipmentType}`);
+      setTrainedUsers(response.data);
     } catch (error) {
       console.error('Error fetching trained users:', error);
     }
@@ -38,23 +38,10 @@ function TrainedUserManage({ onClose }) {
 
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3001/api/trained-users', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          name: newName.trim(),
-          equipmentType
-        })
+      const response = await api.post('/api/trained-users', {
+        name: newName.trim(),
+        equipmentType
       });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || '등록에 실패했습니다.');
-      }
 
       alert('등록되었습니다.');
       setNewName('');
@@ -72,22 +59,11 @@ function TrainedUserManage({ onClose }) {
     }
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3001/api/trained-users/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('삭제에 실패했습니다.');
-      }
-
+      await api.delete(`/api/trained-users/${id}`);
       alert('삭제되었습니다.');
       fetchTrainedUsers();
     } catch (error) {
-      alert(error.message);
+      alert(error.response?.data?.error || error.message || '삭제에 실패했습니다.');
     }
   };
 
