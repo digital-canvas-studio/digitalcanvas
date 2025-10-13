@@ -12,6 +12,8 @@ mongoose.connect(process.env.MONGODB_URI || "mongodb+srv://knuh:knuh7189@cluster
 // Schemas
 const programSchema = new mongoose.Schema({
   title: String,
+  content: String,
+  thumbnailUrl: String,
   description: String,
   startDate: Date,
   endDate: Date,
@@ -20,10 +22,12 @@ const programSchema = new mongoose.Schema({
   currentParticipants: Number,
   category: String,
   status: String
-});
+}, { collection: 'program' }); // server.js와 동일한 컬렉션 사용
 
 const spaceSchema = new mongoose.Schema({
-  name: String,
+  title: String,
+  content: String,
+  thumbnailUrl: String,
   capacity: Number,
   equipment: [String],
   status: String
@@ -58,7 +62,7 @@ const aboutSchema = new mongoose.Schema({
 }, { collection: 'abouts' }); // abouts 콜렉션 사용
 
 // Models
-const Program = mongoose.model('Program', programSchema);
+const Program = mongoose.model('Program', programSchema, 'program');
 const Space = mongoose.model('Space', spaceSchema);
 const Notice = mongoose.model('Notice', noticeSchema);
 const About = mongoose.model('About', aboutSchema, 'abouts');
@@ -75,6 +79,8 @@ async function seedData() {
     const programs = [
       {
         title: "AI 아트 워크숍",
+        content: "인공지능을 활용한 디지털 아트 창작 워크숍입니다. 최신 AI 도구를 활용하여 창의적인 작품을 만들어보세요.",
+        thumbnailUrl: "https://via.placeholder.com/300x200?text=AI+Art",
         description: "인공지능을 활용한 디지털 아트 창작 워크숍입니다.",
         startDate: new Date('2024-07-01'),
         endDate: new Date('2024-07-31'),
@@ -86,6 +92,8 @@ async function seedData() {
       },
       {
         title: "3D 모델링 기초",
+        content: "Blender를 활용한 3D 모델링 기초 과정입니다. 3D 모델링의 기본부터 실전까지 단계별로 배워보세요.",
+        thumbnailUrl: "https://via.placeholder.com/300x200?text=3D+Modeling",
         description: "Blender를 활용한 3D 모델링 기초 과정입니다.",
         startDate: new Date('2024-08-01'),
         endDate: new Date('2024-08-30'),
@@ -97,6 +105,8 @@ async function seedData() {
       },
       {
         title: "VR 콘텐츠 제작",
+        content: "가상현실 콘텐츠 제작 실습 프로그램입니다. 직접 VR 콘텐츠를 기획하고 제작해보는 실무 중심 과정입니다.",
+        thumbnailUrl: "https://via.placeholder.com/300x200?text=VR+Content",
         description: "가상현실 콘텐츠 제작 실습 프로그램입니다.",
         startDate: new Date('2024-09-01'),
         endDate: new Date('2024-09-30'),
@@ -111,31 +121,41 @@ async function seedData() {
     // Add sample spaces
     const spaces = [
       {
-        name: "이메리얼룸01",
+        title: "이메리얼룸01",
+        content: "다양한 프레젠테이션과 세미나를 위한 멀티미디어 공간입니다. 프로젝터와 화이트보드가 구비되어 있어 교육과 회의에 최적화되어 있습니다.",
+        thumbnailUrl: "https://via.placeholder.com/300x200?text=Emereal+Room+01",
         capacity: 20,
         equipment: ["프로젝터", "화이트보드", "컴퓨터"],
         status: "사용가능"
       },
       {
-        name: "이메리얼룸02",
+        title: "이메리얼룸02",
+        content: "최신 VR 기술을 체험할 수 있는 가상현실 전용 공간입니다. 고성능 PC와 모션캡처 시스템을 갖추고 있습니다.",
+        thumbnailUrl: "https://via.placeholder.com/300x200?text=Emereal+Room+02",
         capacity: 15,
         equipment: ["VR헤드셋", "고성능PC", "모션캡처"],
         status: "사용가능"
       },
       {
-        name: "창작방앗간",
+        title: "창작방앗간",
+        content: "아이디어를 현실로 만드는 메이커 공간입니다. 3D프린터와 레이저커터 등 다양한 장비로 프로토타입을 제작할 수 있습니다.",
+        thumbnailUrl: "https://via.placeholder.com/300x200?text=Maker+Space",
         capacity: 25,
         equipment: ["3D프린터", "레이저커터", "작업대"],
         status: "사용가능"
       },
       {
-        name: "공존",
+        title: "공존",
+        content: "협업과 소통을 위한 공유 공간입니다. 대규모 미팅과 워크숍이 가능한 넓은 공간을 제공합니다.",
+        thumbnailUrl: "https://via.placeholder.com/300x200?text=Coexistence",
         capacity: 30,
         equipment: ["회의테이블", "스크린", "음향장비"],
         status: "예약중"
       },
       {
-        name: "메이커스페이스",
+        title: "메이커스페이스",
+        content: "전자 공작과 하드웨어 프로젝트를 위한 공간입니다. 각종 전자부품과 측정장비가 구비되어 있습니다.",
+        thumbnailUrl: "https://via.placeholder.com/300x200?text=Electronics+Lab",
         capacity: 12,
         equipment: ["전자부품", "납땜도구", "측정장비"],
         status: "사용가능"

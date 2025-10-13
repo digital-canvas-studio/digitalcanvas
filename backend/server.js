@@ -137,6 +137,19 @@ const scheduleSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 }, { collection: 'schedules' });
 
+// Popup Schema
+const popupSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  message: { type: String, required: true },
+  imageUrl: String,
+  isActive: { type: Boolean, default: true },
+  startDate: Date,
+  endDate: Date,
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
+}, { collection: 'popups' });
+
 // MongoDB Models
 const Program = mongoose.model('Program', programSchema, 'program');
 const Space = mongoose.model('Space', spaceSchema);
@@ -144,6 +157,7 @@ const Notice = mongoose.model('Notice', noticeSchema);
 const About = mongoose.model('About', aboutSchema, 'abouts');
 const User = mongoose.model('User', userSchema, 'users');
 const Schedule = mongoose.model('Schedule', scheduleSchema, 'schedules');
+const Popup = mongoose.model('Popup', popupSchema, 'popups');
 
 // API for About section (Main page content)
 app.get('/api/abouts', async (req, res) => {
@@ -811,6 +825,126 @@ app.get('/api/schedules/:id', async (req, res) => {
     }
     res.json(schedule);
   } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Popup API routes
+// Get all popups
+app.get('/api/popups', async (req, res) => {
+  try {
+    const popups = await Popup.find().populate('createdBy', 'username name').sort({ createdAt: -1 });
+    res.json(popups);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get active popup
+app.get('/api/popups/active', async (req, res) => {
+  try {
+    const now = new Date();
+    const activePopup = await Popup.findOne({
+      isActive: true,
+      $or: [
+        { startDate: { $lte: now }, endDate: { $gte: now } },
+        { startDate: null, endDate: null }
+      ]
+    }).sort({ createdAt: -1 });
+    
+    res.json(activePopup);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get single popup by ID
+app.get('/api/popups/:id', async (req, res) => {
+  try {
+    const popup = await Popup.findById(req.params.id).populate('createdBy', 'username name');
+    if (!popup) {
+      return res.status(404).json({ error: 'Popup not found' });
+    }
+    res.json(popup);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Create new popup (requires authentication)
+app.post('/api/popups', authenticateToken, async (req, res) => {
+  try {
+    const { title, message, imageUrl, isActive, startDate, endDate } = req.body;
+
+    if (!title || !message) {
+      return res.status(400).json({ error: 'Title and message are required' });
+    }
+
+    const newPopup = new Popup({
+      title,
+      message,
+      imageUrl: imageUrl || '',
+      isActive: isActive !== undefined ? isActive : true,
+      startDate: startDate ? new Date(startDate) : null,
+      endDate: endDate ? new Date(endDate) : null,
+      createdBy: req.user.userId
+    });
+
+    const savedPopup = await newPopup.save();
+    const populatedPopup = await Popup.findById(savedPopup._id).populate('createdBy', 'username name');
+    
+    res.status(201).json(populatedPopup);
+  } catch (error) {
+    console.error('Popup creation error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update popup by ID (requires authentication)
+app.put('/api/popups/:id', authenticateToken, async (req, res) => {
+  try {
+    const { title, message, imageUrl, isActive, startDate, endDate } = req.body;
+
+    const updateData = {
+      title,
+      message,
+      imageUrl,
+      isActive,
+      startDate: startDate ? new Date(startDate) : null,
+      endDate: endDate ? new Date(endDate) : null,
+      updatedAt: new Date()
+    };
+
+    // undefined 값들을 제거
+    Object.keys(updateData).forEach(key => {
+      if (updateData[key] === undefined) {
+        delete updateData[key];
+      }
+    });
+
+    const popup = await Popup.findByIdAndUpdate(req.params.id, updateData, { new: true })
+      .populate('createdBy', 'username name');
+    
+    if (!popup) {
+      return res.status(404).json({ error: 'Popup not found' });
+    }
+    res.json(popup);
+  } catch (error) {
+    console.error('Popup update error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete popup by ID (requires authentication)
+app.delete('/api/popups/:id', authenticateToken, async (req, res) => {
+  try {
+    const popup = await Popup.findByIdAndDelete(req.params.id);
+    if (!popup) {
+      return res.status(404).json({ error: 'Popup not found' });
+    }
+    res.json({ message: 'Popup deleted successfully' });
+  } catch (error) {
+    console.error('Popup delete error:', error);
     res.status(500).json({ error: error.message });
   }
 });

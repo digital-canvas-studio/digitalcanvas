@@ -42,6 +42,7 @@ function Navbar() {
         <li><Link to="/program" onClick={closeMenu}>프로그램</Link></li>
         <li><Link to="/reservation" onClick={closeMenu}>예약/신청</Link></li>
         <li><Link to="/location" onClick={closeMenu}>위치</Link></li>
+        {token && <li><Link to="/popup/manage" onClick={closeMenu}>팝업관리</Link></li>}
       </ul>
       <div className="navbar-login-desktop">
         {token ? (

@@ -20,6 +20,8 @@ import Location from './Location';
 import HomeEdit from './HomeEdit';
 import Login from './Login';
 import Register from './Register';
+import PopupManage from './PopupManage';
+import PopupEdit from './PopupEdit';
 
 function App() {
   return (
@@ -45,6 +47,9 @@ function App() {
           <Route path="/program/:id/edit" element={<ProgramEdit />} />
           <Route path="/reservation" element={<Reservation />} />
           <Route path="/location" element={<Location />} />
+          <Route path="/popup/manage" element={<PopupManage />} />
+          <Route path="/popup/new" element={<PopupEdit />} />
+          <Route path="/popup/edit/:id" element={<PopupEdit />} />
         </Routes>
       </main>
       </div>

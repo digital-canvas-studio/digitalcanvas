@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
-import { Link } from 'react-router-dom';
 import './Home.css';
 import AuthContext from './context/AuthContext';
 import gsap from 'gsap';
@@ -37,6 +36,8 @@ function Home() {
   const heroRef = useRef(null);
   const aboutCardRef = useRef(null);
   const featuresRef = useRef([]);
+  const [popup, setPopup] = useState(null);
+  const [showPopup, setShowPopup] = useState(false);
 
   // 임시: 관리자인 경우 true로 가정
   const isAdmin = true;
@@ -89,7 +90,26 @@ function Home() {
 
   useEffect(() => {
     fetchAbout();
+    fetchActivePopup();
   }, []);
+
+  const fetchActivePopup = async () => {
+    try {
+      const response = await fetch('http://localhost:3001/api/popups/active');
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data._id) {
+          const hasClosedToday = localStorage.getItem(`popup_closed_${data._id}`);
+          if (!hasClosedToday) {
+            setPopup(data);
+            setShowPopup(true);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('팝업 로드 실패:', error);
+    }
+  };
 
   useEffect(() => {
     // Hero 섹션 페이드인
@@ -220,8 +240,39 @@ function Home() {
     setEditMode(false);
   };
 
+  const closePopup = (dontShowToday = false) => {
+    if (dontShowToday && popup) {
+      localStorage.setItem(`popup_closed_${popup._id}`, 'true');
+    }
+    setShowPopup(false);
+  };
+
   return (
     <div className="apple-main-root">
+      {/* 팝업 모달 */}
+      {showPopup && popup && (
+        <div className="popup-overlay" onClick={() => closePopup(false)}>
+          <div className="popup-modal" onClick={(e) => e.stopPropagation()}>
+            <button className="popup-close" onClick={() => closePopup(false)}>×</button>
+            <h2 className="popup-title">{popup.title}</h2>
+            {popup.imageUrl && (
+              <div className="popup-image-wrapper">
+                <img src={popup.imageUrl} alt={popup.title} className="popup-image" />
+              </div>
+            )}
+            <div className="popup-message">{popup.message}</div>
+            <div className="popup-actions">
+              <button className="popup-btn-today" onClick={() => closePopup(true)}>
+                오늘 하루 보지 않기
+              </button>
+              <button className="popup-btn-close" onClick={() => closePopup(false)}>
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* 카드 바깥 상단 타이틀/슬로건 */}
       <div className="apple-hero-header-row">
         <h1 className="apple-title">한국전통문화대학교</h1>
