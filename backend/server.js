@@ -32,20 +32,9 @@ if (process.env.FRONTEND_URL && !allowedOrigins.includes(process.env.FRONTEND_UR
 
 app.use(cors({
   origin: function (origin, callback) {
-    // 개발 환경에서는 모든 origin 허용
-    if (process.env.NODE_ENV === 'development') {
-      callback(null, true);
-      return;
-    }
-    
-    // 프로덕션에서는 허용된 origin만 허용
-    // origin이 없는 경우(서버 간 통신 등)도 허용
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      console.log('CORS blocked origin:', origin);
-      callback(new Error('Not allowed by CORS'));
-    }
+    // 모든 origin 허용 (개발 및 프로덕션 모두)
+    console.log('Request from origin:', origin);
+    callback(null, true);
   },
   credentials: true
 }));
