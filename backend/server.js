@@ -19,24 +19,12 @@ app.use((req, res, next) => {
 // JWT Secret (환경변수에서 가져오거나 기본값 사용)
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
-// Middleware
-const allowedOrigins = [
-  'http://localhost:3000',
-  'https://www.knuh-ditdo.kr',
-  'https://digitalcanvas.onrender.com' // Render 프론트엔드 배포 URL
-];
-
-if (process.env.FRONTEND_URL && !allowedOrigins.includes(process.env.FRONTEND_URL)) {
-  allowedOrigins.push(process.env.FRONTEND_URL);
-}
-
+// Middleware - CORS 완전 개방
 app.use(cors({
-  origin: function (origin, callback) {
-    // 모든 origin 허용 (개발 및 프로덕션 모두)
-    console.log('Request from origin:', origin);
-    callback(null, true);
-  },
-  credentials: true
+  origin: true,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
 
