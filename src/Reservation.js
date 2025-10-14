@@ -674,6 +674,16 @@ function Reservation() {
               const endDate = new Date(reservation.end);
               const createdAt = reservation.createdAt ? new Date(reservation.createdAt) : null;
               
+              // 기본 옵션 정의 (label로 카테고리 판단용)
+              const spaceLabels = ['이메리얼룸01', '이메리얼룸02', '창작방앗간', '공존', '휴관'];
+              const equipmentLabels = ['니콘 DSLR 카메라', '소니 캠코더', '360 카메라(교내연구소만 가능)', 'LED 조명', '줌 사운드 레코더', '현장답사용 마이크리시버', '전자칠판', '노트북'];
+              const makerSpaceLabels = ['3D프린터01', '레이저각인기'];
+              
+              // reservation.spaces를 카테고리별로 분류
+              const spaces = reservation.spaces ? reservation.spaces.filter(item => spaceLabels.includes(item)) : [];
+              const equipment = reservation.spaces ? reservation.spaces.filter(item => equipmentLabels.includes(item)) : [];
+              const makerSpaces = reservation.spaces ? reservation.spaces.filter(item => makerSpaceLabels.includes(item)) : [];
+              
               return (
                 <div key={reservation._id} className="recent-reservation-item">
                   <div className="recent-item-number">{index + 1}</div>
@@ -692,11 +702,14 @@ function Reservation() {
                       <strong>{userInfo.name || '이름 없음'}</strong> | {userInfo.department || '소속 없음'}
                     </div>
                     <div className="recent-item-details">
-                      {reservation.spaces && reservation.spaces.length > 0 && (
-                        <span className="recent-item-tag">공간: {reservation.spaces.join(', ')}</span>
+                      {spaces.length > 0 && (
+                        <span className="recent-item-tag">공간: {spaces.join(', ')}</span>
                       )}
-                      {reservation.equipment && reservation.equipment.length > 0 && (
-                        <span className="recent-item-tag">장비: {reservation.equipment.join(', ')}</span>
+                      {equipment.length > 0 && (
+                        <span className="recent-item-tag">장비: {equipment.join(', ')}</span>
+                      )}
+                      {makerSpaces.length > 0 && (
+                        <span className="recent-item-tag">메이커스페이스: {makerSpaces.join(', ')}</span>
                       )}
                     </div>
                     {userInfo.contact && (

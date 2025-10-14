@@ -667,6 +667,16 @@
   font-weight: 800;
   font-size: 1.15em;
 }
+.apple-hero-about-html h1,
+.apple-hero-about-html h2,
+.apple-hero-about-html h3,
+.apple-hero-about-html h4,
+.apple-hero-about-html h5,
+.apple-hero-about-html h6 {
+  color: #fff;
+  font-weight: 800;
+  margin: 0.5em 0 0.7em 0;
+}
 .apple-hero-about-html img {
   display: block;
   max-width: 90%;

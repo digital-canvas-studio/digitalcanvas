@@ -372,7 +372,7 @@ app.post('/api/register', async (req, res) => {
 // API routes
 app.get('/api/programs', async (req, res) => {
   try {
-    const programs = await Program.find();
+    const programs = await Program.find().sort({ _id: -1 }); // 최신순 정렬
     res.json(programs);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -1094,7 +1094,14 @@ app.get('/api/trained-users', async (req, res) => {
 // Get trained users by equipment type
 app.get('/api/trained-users/:equipmentType', async (req, res) => {
   try {
-    const trainedUsers = await TrainedUser.find({ equipmentType: req.params.equipmentType }).sort({ registeredAt: -1 });
+    const equipmentType = req.params.equipmentType;
+    
+    // '3d-printer'일 경우 3d-printer로 시작하는 모든 장비 포함 (01, 02 등)
+    const query = equipmentType === '3d-printer' 
+      ? { equipmentType: { $regex: '^3d-printer' } }
+      : { equipmentType: equipmentType };
+    
+    const trainedUsers = await TrainedUser.find(query).sort({ registeredAt: -1 });
     res.json(trainedUsers);
   } catch (error) {
     console.error('Trained users fetch error:', error);

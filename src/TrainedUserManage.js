@@ -8,7 +8,8 @@ function TrainedUserManage({ onClose }) {
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
   const [trainedUsers, setTrainedUsers] = useState([]);
-  const [equipmentType, setEquipmentType] = useState('3d-printer-01');
+  const [equipmentType, setEquipmentType] = useState('3d-printer');
+  const [specificEquipment, setSpecificEquipment] = useState('3d-printer-01'); // 등록할 구체적 장비
   const [newName, setNewName] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -38,9 +39,12 @@ function TrainedUserManage({ onClose }) {
 
     setLoading(true);
     try {
+      // 등록할 때는 구체적인 장비 번호 사용
+      const equipmentToRegister = equipmentType === '3d-printer' ? specificEquipment : equipmentType;
+      
       const response = await api.post('/api/trained-users', {
         name: newName.trim(),
-        equipmentType
+        equipmentType: equipmentToRegister
       });
 
       alert('등록되었습니다.');
@@ -68,7 +72,11 @@ function TrainedUserManage({ onClose }) {
   };
 
   const getEquipmentLabel = (type) => {
-    return type === '3d-printer-01' ? '3D프린터01' : '레이저각인기';
+    if (type === '3d-printer') return '3D프린터';
+    if (type === 'laser-engraver') return '레이저각인기';
+    if (type === '3d-printer-01') return '3D프린터01';
+    if (type === '3d-printer-02') return '3D프린터02';
+    return type;
   };
 
   return (
@@ -87,11 +95,11 @@ function TrainedUserManage({ onClose }) {
               <label>
                 <input
                   type="radio"
-                  value="3d-printer-01"
-                  checked={equipmentType === '3d-printer-01'}
+                  value="3d-printer"
+                  checked={equipmentType === '3d-printer'}
                   onChange={(e) => setEquipmentType(e.target.value)}
                 />
-                3D프린터01
+                3D프린터 (모든 3D프린터)
               </label>
               <label>
                 <input
@@ -108,6 +116,22 @@ function TrainedUserManage({ onClose }) {
           {/* 등록 폼 */}
           <div className="register-form">
             <h3>{getEquipmentLabel(equipmentType)} 이수자 등록</h3>
+            
+            {/* 3D프린터인 경우 구체적인 장비 선택 */}
+            {equipmentType === '3d-printer' && (
+              <div className="specific-equipment-selector">
+                <label>등록할 장비:</label>
+                <select 
+                  value={specificEquipment}
+                  onChange={(e) => setSpecificEquipment(e.target.value)}
+                  className="equipment-dropdown"
+                >
+                  <option value="3d-printer-01">3D프린터01</option>
+                  <option value="3d-printer-02">3D프린터02</option>
+                </select>
+              </div>
+            )}
+            
             <div className="input-group">
               <input
                 type="text"
@@ -137,6 +161,7 @@ function TrainedUserManage({ onClose }) {
                   <thead>
                     <tr>
                       <th>이름</th>
+                      {equipmentType === '3d-printer' && <th>장비</th>}
                       <th>등록일시</th>
                       <th>삭제</th>
                     </tr>
@@ -145,6 +170,9 @@ function TrainedUserManage({ onClose }) {
                     {trainedUsers.map((user) => (
                       <tr key={user._id}>
                         <td>{user.name}</td>
+                        {equipmentType === '3d-printer' && (
+                          <td>{getEquipmentLabel(user.equipmentType)}</td>
+                        )}
                         <td>{new Date(user.registeredAt).toLocaleString('ko-KR')}</td>
                         <td>
                           <button 
