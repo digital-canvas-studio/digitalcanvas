@@ -678,8 +678,16 @@ function Reservation() {
         </div>
       </div>
 
+      {/* 로딩 중 메시지 */}
+      {isLoading && (
+        <div className="loading-message">
+          <div className="loading-spinner"></div>
+          <span>예약 내역을 불러오는 중입니다...</span>
+        </div>
+      )}
+      
       {/* 로딩 안내 문구 */}
-      {showLoadingNotice && (
+      {!isLoading && showLoadingNotice && (
         <div className="loading-notice">
           ℹ️ 예약 현황이 늦게 뜰 수 있으니 1분 정도 기다려보세요.
         </div>
