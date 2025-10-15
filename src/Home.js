@@ -422,9 +422,8 @@ function Home() {
           </div>
           <div className="apple-hero-rightcol">
             {isLoading && !editMode ? (
-              <div className="loading-message-home">
-                <div className="loading-spinner"></div>
-                <span>디지털도화서 정보를 불러오는 중입니다...</span>
+              <div className="loading-text-home">
+                Loading...
               </div>
             ) : (
               <>
