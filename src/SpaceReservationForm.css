@@ -214,6 +214,19 @@
   font-size: 14px;
   cursor: pointer;
   flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 색상 원 스타일 */
+.color-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid #666;
+  flex-shrink: 0;
+  display: inline-block;
 }
 
 .radio-item input[type="radio"]:checked + label,

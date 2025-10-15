@@ -564,6 +564,55 @@ function SpaceReservationForm({ onClose, onReservationAdded }) {
     return option ? option.label : '';
   };
 
+  // 색상 풀 정의 (새 항목용) - 명확하게 구분되는 색상들
+  const colorPool = [
+    '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', // 밝고 구분되는 색상들
+    '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9',
+    '#F8C471', '#82E0AA', '#F1948A', '#85C1E9', '#D7BDE2',
+    '#A9DFBF', '#F9E79F', '#D5A6BD', '#AED6F1', '#A3E4D7',
+    '#FADBD8', '#D5DBDB', '#FCF3CF', '#D6EAF8', '#D1F2EB',
+    '#FAD7A0', '#E8DAEF', '#D5F4E6', '#FEF9E7', '#EBF5FB'
+  ];
+
+  // 항목별 색상 매핑 함수 (기존 항목 + 동적 색상 배정)
+  const getItemColor = (itemName) => {
+    const colorMap = {
+      // 공간 대여 - 파란색 계열
+      '이메리얼룸01': '#45B7D1', // 밝은 파랑
+      '이메리얼룸02': '#3498DB', // 중간 파랑
+      '창작방앗간': '#2ECC71', // 초록
+      '공존': '#F39C12', // 주황
+      '휴관': '#95A5A6', // 회색
+      
+      // 장비 대여 - 초록색 계열
+      '니콘 DSLR 카메라': '#4ECDC4', // 청록
+      '소니 캠코더': '#27AE60', // 진한 초록
+      '360 카메라(교내연구소만 가능)': '#96CEB4', // 연한 청록
+      'LED 조명': '#F7DC6F', // 노랑
+      '줌 사운드 레코더': '#E67E22', // 주황
+      '현장답사용 마이크리시버': '#D35400', // 진한 주황
+      '전자칠판': '#34495E', // 남색
+      '노트북': '#7F8C8D', // 회색
+      
+      // 메이커스페이스 - 구분되는 색상
+      '3D프린터01': '#9B59B6', // 보라
+      '레이저각인기': '#E74C3C', // 빨강
+    };
+    
+    // 기존 항목이면 고정 색상 반환
+    if (colorMap[itemName]) {
+      return colorMap[itemName];
+    }
+    
+    // 새 항목이면 해시 기반으로 일관된 색상 배정
+    let hash = 0;
+    for (let i = 0; i < itemName.length; i++) {
+      hash = itemName.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const colorIndex = Math.abs(hash) % colorPool.length;
+    return colorPool[colorIndex];
+  };
+
   return (
     <div className="space-reservation-form-overlay">
       <div className="space-reservation-form-container">
@@ -704,7 +753,10 @@ function SpaceReservationForm({ onClose, onReservationAdded }) {
                     checked={formData.spaceTypes.includes(option.value)}
                     onChange={() => handleCheckboxChange('spaceTypes', option.value)}
                   />
-                  <label htmlFor={`space-${option.value}`}>{option.label}</label>
+                  <label htmlFor={`space-${option.value}`}>
+                    <span className="color-indicator" style={{backgroundColor: getItemColor(option.label)}}></span>
+                    {option.label}
+                  </label>
                 </div>
               ))}
             </div>
@@ -724,7 +776,10 @@ function SpaceReservationForm({ onClose, onReservationAdded }) {
                     checked={formData.equipmentTypes.includes(option.value)}
                     onChange={() => handleCheckboxChange('equipmentTypes', option.value)}
                   />
-                  <label htmlFor={`equipment-${option.value}`}>{option.label}</label>
+                  <label htmlFor={`equipment-${option.value}`}>
+                    <span className="color-indicator" style={{backgroundColor: getItemColor(option.label)}}></span>
+                    {option.label}
+                  </label>
                 </div>
               ))}
             </div>
@@ -744,7 +799,10 @@ function SpaceReservationForm({ onClose, onReservationAdded }) {
                     checked={formData.makerSpaceTypes.includes(option.value)}
                     onChange={() => handleCheckboxChange('makerSpaceTypes', option.value)}
                   />
-                  <label htmlFor={`maker-${option.value}`}>{option.label}</label>
+                  <label htmlFor={`maker-${option.value}`}>
+                    <span className="color-indicator" style={{backgroundColor: getItemColor(option.label)}}></span>
+                    {option.label}
+                  </label>
                 </div>
               ))}
             </div>

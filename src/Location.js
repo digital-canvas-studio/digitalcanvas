@@ -12,7 +12,8 @@ function Location() {
     window.navermap_authFailure = function() {
       console.error('네이버 지도 API 인증에 실패했습니다. Client ID를 확인해주세요.');
       console.error('현재 도메인:', window.location.origin);
-      console.error('www 없이 접속해주세요: https://knuh-ditdo.kr');
+      console.error('서버에서 자동으로 www가 추가되고 있습니다.');
+      console.error('네이버 클라우드 플랫폼에 www 도메인도 등록해야 합니다.');
     };
 
     const script = document.createElement('script');

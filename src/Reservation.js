@@ -404,21 +404,83 @@ function Reservation() {
     return window.innerWidth <= 768 ? 'timeGridFourDay' : 'timeGridWeek';
   };
 
-  // 랜덤 색상 생성 함수
-  const getRandomColor = () => {
-    const colors = [
-      '#3498db', // 파랑
-      '#e74c3c', // 빨강
-      '#f1c40f', // 노랑
-      '#2ecc71', // 초록
-      '#9b59b6', // 보라
-      '#1abc9c', // 청록
-      '#e67e22', // 주황
-      '#34495e', // 남색
-      '#fd79a8', // 핑크
-      '#00b894', // 민트
-    ];
-    return colors[Math.floor(Math.random() * colors.length)];
+  // 색상 풀 정의 (새 항목용) - 명확하게 구분되는 색상들
+  const colorPool = [
+    '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', // 밝고 구분되는 색상들
+    '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9',
+    '#F8C471', '#82E0AA', '#F1948A', '#85C1E9', '#D7BDE2',
+    '#A9DFBF', '#F9E79F', '#D5A6BD', '#AED6F1', '#A3E4D7',
+    '#FADBD8', '#D5DBDB', '#FCF3CF', '#D6EAF8', '#D1F2EB',
+    '#FAD7A0', '#E8DAEF', '#D5F4E6', '#FEF9E7', '#EBF5FB'
+  ];
+
+  // 항목별 색상 매핑 함수 (기존 항목 + 동적 색상 배정)
+  const getItemColor = (itemName) => {
+    const colorMap = {
+      // 공간 대여 - 파란색 계열
+      '이메리얼룸01': '#45B7D1', // 밝은 파랑
+      '이메리얼룸02': '#3498DB', // 중간 파랑
+      '창작방앗간': '#2ECC71', // 초록
+      '공존': '#F39C12', // 주황
+      '휴관': '#95A5A6', // 회색
+      
+      // 장비 대여 - 초록색 계열
+      '니콘 DSLR 카메라': '#4ECDC4', // 청록
+      '소니 캠코더': '#27AE60', // 진한 초록
+      '360 카메라(교내연구소만 가능)': '#96CEB4', // 연한 청록
+      'LED 조명': '#F7DC6F', // 노랑
+      '줌 사운드 레코더': '#E67E22', // 주황
+      '현장답사용 마이크리시버': '#D35400', // 진한 주황
+      '전자칠판': '#34495E', // 남색
+      '노트북': '#7F8C8D', // 회색
+      
+      // 메이커스페이스 - 구분되는 색상
+      '3D프린터01': '#9B59B6', // 보라
+      '레이저각인기': '#E74C3C', // 빨강
+    };
+    
+    // 기존 항목이면 고정 색상 반환
+    if (colorMap[itemName]) {
+      return colorMap[itemName];
+    }
+    
+    // 새 항목이면 해시 기반으로 일관된 색상 배정
+    let hash = 0;
+    for (let i = 0; i < itemName.length; i++) {
+      hash = itemName.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const colorIndex = Math.abs(hash) % colorPool.length;
+    return colorPool[colorIndex];
+  };
+
+  // 여러 항목이 있을 때 색상 결정 함수
+  const getEventColor = (reservationDetails) => {
+    if (!reservationDetails || reservationDetails.length === 0) {
+      return '#95a5a6'; // 기본 회색
+    }
+    
+    // 첫 번째 항목의 색상을 사용 (우선순위: 메이커스페이스 > 장비 > 공간)
+    const makerSpaceItems = reservationDetails.filter(item => 
+      ['3D프린터01', '레이저각인기'].includes(item)
+    );
+    const equipmentItems = reservationDetails.filter(item => 
+      ['니콘 DSLR 카메라', '소니 캠코더', '360 카메라(교내연구소만 가능)', 
+       'LED 조명', '줌 사운드 레코더', '현장답사용 마이크리시버', 
+       '전자칠판', '노트북'].includes(item)
+    );
+    const spaceItems = reservationDetails.filter(item => 
+      ['이메리얼룸01', '이메리얼룸02', '창작방앗간', '공존', '휴관'].includes(item)
+    );
+    
+    if (makerSpaceItems.length > 0) {
+      return getItemColor(makerSpaceItems[0]);
+    } else if (equipmentItems.length > 0) {
+      return getItemColor(equipmentItems[0]);
+    } else if (spaceItems.length > 0) {
+      return getItemColor(spaceItems[0]);
+    }
+    
+    return getItemColor(reservationDetails[0]);
   };
 
   const formatEvent = (reservation) => {
@@ -477,14 +539,17 @@ function Reservation() {
       }
     }
 
+    // 예약 항목들로부터 색상 결정
+    const eventColor = getEventColor(reservationDetails);
+
     return {
       id: reservation._id,
       title: title,
       start: new Date(reservation.start),
       end: new Date(reservation.end),
       allDay: false,
-      backgroundColor: reservation.type === 'space' ? getRandomColor() : getRandomColor(),
-      borderColor: reservation.type === 'space' ? '#222' : '#222',
+      backgroundColor: eventColor,
+      borderColor: eventColor,
       extendedProps: {
         type: reservation.type,
         spaces: reservation.spaces,
@@ -603,7 +668,7 @@ function Reservation() {
       <div className="page-header">
         <h1>공간예약신청 일정</h1>
         <div className="header-buttons">
-          <button onClick={handleReservationClick} className="btn">공간예약신청</button>
+          <button onClick={handleReservationClick} className="btn">공간&장비신청</button>
           {token && (
             <>
               <button onClick={handleTrainedUserManageClick} className="btn btn-secondary">교육이수자 명단</button>
@@ -619,6 +684,86 @@ function Reservation() {
           ℹ️ 예약 현황이 늦게 뜰 수 있으니 1분 정도 기다려보세요.
         </div>
       )}
+
+      {/* 색상 범례 */}
+      <div className="color-legend">
+        <h3>예약 항목별 색상 안내</h3>
+        <div className="legend-sections">
+          <div className="legend-section">
+            <h4>공간 대여</h4>
+            <div className="legend-items">
+              <div className="legend-item">
+                <span className="legend-color" style={{backgroundColor: '#45B7D1'}}></span>
+                <span>이메리얼룸01</span>
+              </div>
+              <div className="legend-item">
+                <span className="legend-color" style={{backgroundColor: '#3498DB'}}></span>
+                <span>이메리얼룸02</span>
+              </div>
+              <div className="legend-item">
+                <span className="legend-color" style={{backgroundColor: '#2ECC71'}}></span>
+                <span>창작방앗간</span>
+              </div>
+              <div className="legend-item">
+                <span className="legend-color" style={{backgroundColor: '#F39C12'}}></span>
+                <span>공존</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="legend-section">
+            <h4>장비 대여</h4>
+            <div className="legend-items">
+              <div className="legend-item">
+                <span className="legend-color" style={{backgroundColor: '#4ECDC4'}}></span>
+                <span>니콘 DSLR 카메라</span>
+              </div>
+              <div className="legend-item">
+                <span className="legend-color" style={{backgroundColor: '#27AE60'}}></span>
+                <span>소니 캠코더</span>
+              </div>
+              <div className="legend-item">
+                <span className="legend-color" style={{backgroundColor: '#96CEB4'}}></span>
+                <span>360 카메라</span>
+              </div>
+              <div className="legend-item">
+                <span className="legend-color" style={{backgroundColor: '#F7DC6F'}}></span>
+                <span>LED 조명</span>
+              </div>
+              <div className="legend-item">
+                <span className="legend-color" style={{backgroundColor: '#D35400'}}></span>
+                <span>줌 사운드 레코더</span>
+              </div>
+              <div className="legend-item">
+                <span className="legend-color" style={{backgroundColor: '#E67E22'}}></span>
+                <span>현장답사용 마이크리시버</span>
+              </div>
+              <div className="legend-item">
+                <span className="legend-color" style={{backgroundColor: '#34495E'}}></span>
+                <span>전자칠판</span>
+              </div>
+              <div className="legend-item">
+                <span className="legend-color" style={{backgroundColor: '#7F8C8D'}}></span>
+                <span>노트북</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="legend-section">
+            <h4>메이커스페이스</h4>
+            <div className="legend-items">
+              <div className="legend-item">
+                <span className="legend-color" style={{backgroundColor: '#9b59b6'}}></span>
+                <span>3D프린터01</span>
+              </div>
+              <div className="legend-item">
+                <span className="legend-color" style={{backgroundColor: '#E74C3C'}}></span>
+                <span>레이저각인기</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <FullCalendar
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}

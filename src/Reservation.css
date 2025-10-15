@@ -637,4 +637,84 @@
   .recent-item-number {
     align-self: flex-start;
   }
+}
+
+/* 색상 범례 스타일 */
+.color-legend {
+  margin: 15px 0;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
+}
+
+.color-legend h3 {
+  margin: 0 0 12px 0;
+  color: #333;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.legend-sections {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.legend-section h4 {
+  margin: 0 0 6px 0;
+  color: #555;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding-bottom: 3px;
+  border-bottom: 1px solid #ddd;
+}
+
+.legend-items {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  border: 1px solid #ccc;
+  flex-shrink: 0;
+}
+
+.legend-item span:last-child {
+  font-size: 0.75rem;
+  color: #666;
+}
+
+@media (max-width: 768px) {
+  .legend-sections {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  
+  .color-legend {
+    padding: 12px;
+  }
+  
+  .color-legend h3 {
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+  }
+  
+  .legend-section h4 {
+    font-size: 0.8rem;
+  }
+  
+  .legend-item span:last-child {
+    font-size: 0.7rem;
+  }
 } 
