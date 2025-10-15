@@ -1136,3 +1136,47 @@
     font-size: 16px;
   }
 }
+
+/* 로딩 메시지 스타일 */
+.loading-message-home {
+  background-color: #e3f2fd;
+  border: 1px solid #2196f3;
+  border-left: 4px solid #2196f3;
+  color: #1565c0;
+  padding: 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  animation: fadeInHome 0.3s ease-in;
+  min-height: 100px;
+}
+
+.loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid #bbdefb;
+  border-top: 3px solid #2196f3;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes fadeInHome {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

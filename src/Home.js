@@ -40,6 +40,7 @@ function Home() {
   const [popup, setPopup] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
   // 임시: 관리자인 경우 true로 가정
   const isAdmin = true;
@@ -200,6 +201,7 @@ function Home() {
 
   const fetchAbout = async () => {
     try {
+      setIsLoading(true);
       const response = await api.get('/api/abouts');
       setAbout(response.data);
     } catch (error) {
@@ -209,6 +211,8 @@ function Home() {
       } else {
         setAbout({ title: '디지털도화서란?', content: '<p>데이터를 불러오는 중 문제가 발생했습니다.</p>' });
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -417,17 +421,26 @@ function Home() {
             )}
           </div>
           <div className="apple-hero-rightcol">
-            {!editMode && about.content && (
-              <div
-                className="apple-hero-about-html"
-                dangerouslySetInnerHTML={{ __html: about.content }}
-              />
-            )}
-            {editMode && editor && (
-              <div className="tiptap-editor-wrap">
-                <TiptapToolbar editor={editor} />
-                <EditorContent editor={editor} />
+            {isLoading && !editMode ? (
+              <div className="loading-message-home">
+                <div className="loading-spinner"></div>
+                <span>디지털도화서 정보를 불러오는 중입니다...</span>
               </div>
+            ) : (
+              <>
+                {!editMode && about.content && (
+                  <div
+                    className="apple-hero-about-html"
+                    dangerouslySetInnerHTML={{ __html: about.content }}
+                  />
+                )}
+                {editMode && editor && (
+                  <div className="tiptap-editor-wrap">
+                    <TiptapToolbar editor={editor} />
+                    <EditorContent editor={editor} />
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
