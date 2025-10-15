@@ -239,13 +239,13 @@ function SpaceReservationForm({ onClose, onReservationAdded }) {
       return;
     }
 
-    // 예약 날짜가 5일 이내인지 확인
+    // 예약 날짜가 7일 이내인지 확인
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const daysDifference = Math.ceil((requestDate - today) / (1000 * 60 * 60 * 24));
     
-    if (daysDifference > 5) {
-      alert('5일이내 기간에 신청가능합니다.');
+    if (daysDifference > 7) {
+      alert('7일이내 기간에 신청가능합니다.');
       return;
     }
 
