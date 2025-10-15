@@ -34,17 +34,9 @@ function Location() {
           });
         } catch (error) {
           console.error('지도 초기화 중 오류 발생:', error);
-          // www 도메인으로 접속한 경우 안내 메시지 표시
-          if (window.location.hostname.includes('www.')) {
-            alert('지도 로딩에 문제가 있습니다. www 없이 접속해주세요: https://knuh-ditdo.kr');
-          }
         }
       } else {
         console.error('네이버 지도 API가 로드되지 않았습니다.');
-        // www 도메인으로 접속한 경우 안내 메시지 표시
-        if (window.location.hostname.includes('www.')) {
-          alert('지도 로딩에 문제가 있습니다. www 없이 접속해주세요: https://knuh-ditdo.kr');
-        }
       }
     };
     script.onerror = () => {
