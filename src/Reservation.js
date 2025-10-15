@@ -396,7 +396,6 @@ function Reservation() {
   const [showTrainedUserManage, setShowTrainedUserManage] = useState(false);
   const [showOptionManage, setShowOptionManage] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [showLoadingNotice, setShowLoadingNotice] = useState(true);
   const [recentReservations, setRecentReservations] = useState([]);
 
   // 화면 너비에 따라 초기 뷰를 결정하는 함수
@@ -582,10 +581,6 @@ function Reservation() {
         console.error("Error fetching reservations:", error);
       } finally {
         setIsLoading(false);
-        // 10초 후에 안내 문구 숨김
-        setTimeout(() => {
-          setShowLoadingNotice(false);
-        }, 10000);
       }
     };
     fetchReservations();
@@ -683,13 +678,6 @@ function Reservation() {
         <div className="loading-message">
           <div className="loading-spinner"></div>
           <span>예약 내역을 불러오는 중입니다...</span>
-        </div>
-      )}
-      
-      {/* 로딩 안내 문구 */}
-      {!isLoading && showLoadingNotice && (
-        <div className="loading-notice">
-          ℹ️ 예약 현황이 늦게 뜰 수 있으니 1분 정도 기다려보세요.
         </div>
       )}
 
