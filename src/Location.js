@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import './Location.css';
 
-const NAVER_CLIENT_ID = 'p1egfvl5cg';
+const NAVER_CLIENT_ID = '7ogmif84uh';
 const center = { lat: 36.308555, lng: 126.899024 };
 
 function Location() {
@@ -9,7 +9,7 @@ function Location() {
 
   useEffect(() => {
     const script = document.createElement('script');
-    script.src = `https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=${NAVER_CLIENT_ID}`;
+    script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${NAVER_CLIENT_ID}`;
     script.async = true;
     script.onload = () => {
       // eslint-disable-next-line no-undef
