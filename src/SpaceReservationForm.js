@@ -18,6 +18,7 @@ function SpaceReservationForm({ onClose, onReservationAdded }) {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [contactError, setContactError] = useState('');
   
   // 동적으로 로드되는 옵션
   const [spaceOptions, setSpaceOptions] = useState([]);
@@ -121,10 +122,29 @@ function SpaceReservationForm({ onClose, onReservationAdded }) {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    
+    // 연락처 필드 유효성 검사
+    if (name === 'contact') {
+      // 숫자만 입력 허용
+      const numericValue = value.replace(/[^0-9]/g, '');
+      
+      setFormData(prev => ({
+        ...prev,
+        [name]: numericValue
+      }));
+      
+      // 연락처 유효성 검사
+      if (numericValue && numericValue.length !== 11) {
+        setContactError('연락처를 제대로 입력해주세요');
+      } else {
+        setContactError('');
+      }
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
   const handleCheckboxChange = (name, value) => {
@@ -157,6 +177,11 @@ function SpaceReservationForm({ onClose, onReservationAdded }) {
     
     if (!formData.contact) {
       alert('연락처를 입력해주세요.');
+      return;
+    }
+    
+    if (formData.contact.length !== 11) {
+      alert('연락처를 제대로 입력해주세요');
       return;
     }
     
@@ -662,15 +687,24 @@ function SpaceReservationForm({ onClose, onReservationAdded }) {
             <div className="info-notice">
               예약상세정보에 핸드폰번호 마지막4자리가 표시됩니다.
             </div>
+            <div className="contact-notice">
+              연락처를 제대로 입력안할시 예약이 안됩니다
+            </div>
             <input
               type="text"
               name="contact"
               value={formData.contact}
               onChange={handleInputChange}
-              className="form-input"
-              placeholder=""
+              className={`form-input ${contactError ? 'error' : ''}`}
+              placeholder="01012345678"
+              maxLength="11"
               required
             />
+            {contactError && (
+              <div className="error-message">
+                {contactError}
+              </div>
+            )}
           </div>
 
           {/* 4. 예약날짜 */}

@@ -242,6 +242,26 @@
   line-height: 1.4;
 }
 
+.contact-notice {
+  color: #ff6b6b;
+  font-size: 13px;
+  margin-bottom: 8px;
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+.error-message {
+  color: #ff4444;
+  font-size: 12px;
+  margin-top: 5px;
+  font-weight: 500;
+}
+
+.form-input.error {
+  border-color: #ff4444;
+  background-color: #2a1a1a;
+}
+
 .privacy-notice {
   color: #ff6b6b;
   font-size: 14px;
