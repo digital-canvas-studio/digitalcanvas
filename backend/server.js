@@ -29,28 +29,43 @@ app.use(cors({
 app.use(express.json());
 
 // MongoDB Connection (with connection pool)
+// 연결을 비동기로 처리하여 서버 시작 시간 단축
+let mongoConnected = false;
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-  maxPoolSize: 10, // 동시에 최대 10개 커넥션 유지
+  maxPoolSize: 5, // 동시에 최대 5개 커넥션 유지 (비용 절감)
+  minPoolSize: 1, // 최소 1개 커넥션 유지
+  serverSelectionTimeoutMS: 5000, // 서버 선택 타임아웃 5초
+  socketTimeoutMS: 45000, // 소켓 타임아웃 45초
+  connectTimeoutMS: 10000, // 연결 타임아웃 10초
 })
-.then(() => console.log('Successfully connected to MongoDB (with connection pool)'))
-.catch(err => console.error('Could not connect to MongoDB', err));
+.then(() => {
+  mongoConnected = true;
+  console.log('Successfully connected to MongoDB (with connection pool)');
+})
+.catch(err => {
+  console.error('Could not connect to MongoDB', err);
+  // 연결 실패해도 서버는 계속 실행 (재연결 시도)
+});
 
-// Health check endpoint
+// MongoDB 연결 상태 확인 미들웨어 (선택적)
+const checkMongoConnection = (req, res, next) => {
+  if (!mongoConnected && mongoose.connection.readyState !== 1) {
+    return res.status(503).json({ 
+      error: 'Database connection not ready',
+      message: '서버가 데이터베이스에 연결 중입니다. 잠시 후 다시 시도해주세요.'
+    });
+  }
+  next();
+};
+
+// Health check endpoint (최적화: 빠른 응답을 위해 최소한의 데이터만 반환)
 app.get('/health', (req, res) => {
-  res.json({ 
-    message: 'Digital Canvas Backend API',
-    status: 'running',
-    timestamp: new Date().toISOString(),
-    endpoints: {
-      about: '/api/about',
-      spaces: '/api/spaces',
-      notices: '/api/notices',
-      programs: '/api/program',
-      schedules: '/api/schedules',
-      auth: '/api/login, /api/register'
-    }
+  // MongoDB 연결 상태 확인 없이 즉시 응답 (cold start 시간 단축)
+  res.status(200).json({ 
+    status: 'ok',
+    timestamp: new Date().toISOString()
   });
 });
 
@@ -86,6 +101,10 @@ const programSchema = new mongoose.Schema({
   status: String
 }, { collection: 'program' }); // program 콜렉션 사용
 
+// 인덱스 추가
+programSchema.index({ startDate: -1 }); // 시작일 기준 정렬 최적화
+programSchema.index({ status: 1 }); // 상태별 필터링 최적화
+
 const spaceSchema = new mongoose.Schema({
   title: String,
   content: String,
@@ -103,6 +122,10 @@ const noticeSchema = new mongoose.Schema({
   category: String,
   status: String
 });
+
+// 인덱스 추가
+noticeSchema.index({ createdAt: -1 }); // 최신순 정렬 최적화
+noticeSchema.index({ status: 1 }); // 상태별 필터링 최적화
 
 const aboutSchema = new mongoose.Schema({
   title: String,
@@ -149,6 +172,13 @@ const scheduleSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 }, { collection: 'schedules' });
 
+// 인덱스 추가 (쿼리 성능 향상 및 비용 절감)
+scheduleSchema.index({ start: 1 }); // 날짜 범위 쿼리 최적화
+scheduleSchema.index({ end: 1 }); // 종료일 기준 쿼리 최적화
+scheduleSchema.index({ createdAt: -1 }); // 최신순 정렬 최적화
+scheduleSchema.index({ userId: 1 }); // 사용자별 조회 최적화
+scheduleSchema.index({ status: 1 }); // 상태별 필터링 최적화
+
 // Popup Schema
 const popupSchema = new mongoose.Schema({
   title: { type: String, required: true },
@@ -163,6 +193,10 @@ const popupSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now }
 }, { collection: 'popups' });
 
+// 인덱스 추가
+popupSchema.index({ isActive: 1, startDate: 1, endDate: 1 }); // 활성 팝업 조회 최적화
+popupSchema.index({ createdAt: -1 }); // 최신순 정렬 최적화
+
 // MongoDB Models
 const Program = mongoose.model('Program', programSchema, 'program');
 const Space = mongoose.model('Space', spaceSchema);
@@ -176,12 +210,14 @@ const Popup = mongoose.model('Popup', popupSchema, 'popups');
 app.get('/api/abouts', async (req, res) => {
   try {
     // abouts 컬렉션은 문서가 하나만 있을 것으로 가정
-    const aboutData = await About.findOne();
+    // lean() 사용으로 Mongoose 문서 대신 일반 객체 반환 (성능 향상)
+    const aboutData = await About.findOne().lean();
     if (!aboutData) {
       return res.status(404).json({ message: 'About data not found.' });
     }
     res.json(aboutData);
   } catch (error) {
+    console.error('About API error:', error);
     res.status(500).json({ message: error.message });
   }
 });
@@ -372,7 +408,11 @@ app.post('/api/register', async (req, res) => {
 // API routes
 app.get('/api/programs', async (req, res) => {
   try {
-    const programs = await Program.find().sort({ _id: -1 }); // 최신순 정렬
+    // 필요한 필드만 선택하여 데이터 전송량 감소
+    const programs = await Program.find()
+      .select('title thumbnailUrl description startDate endDate instructor maxParticipants currentParticipants category status')
+      .sort({ _id: -1 }) // 최신순 정렬
+      .limit(100); // 최대 100개로 제한
     res.json(programs);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -475,7 +515,10 @@ app.delete('/api/programs/:id', async (req, res) => {
 
 app.get('/api/spaces', async (req, res) => {
   try {
-    const spaces = await Space.find();
+    // 필요한 필드만 선택하여 데이터 전송량 감소
+    const spaces = await Space.find()
+      .select('title thumbnailUrl capacity equipment status')
+      .limit(100); // 최대 100개로 제한
     res.json(spaces);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -559,7 +602,11 @@ app.get('/api/spaces/:id', async (req, res) => {
 
 app.get('/api/notices', async (req, res) => {
   try {
-    const notices = await Notice.find().sort({ createdAt: -1 }); // 최신순 정렬
+    // 필요한 필드만 선택하여 데이터 전송량 감소
+    const notices = await Notice.find()
+      .select('title author createdAt category status')
+      .sort({ createdAt: -1 }) // 최신순 정렬
+      .limit(100); // 최대 100개로 제한
     res.json(notices);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -765,7 +812,39 @@ app.get('/api/notices/:id', async (req, res) => {
 // Schedules API routes
 app.get('/api/schedules', async (req, res) => {
   try {
-    const schedules = await Schedule.find().populate('userId', 'username name');
+    const { start, end, limit } = req.query;
+    
+    // 쿼리 빌더 생성
+    let query = Schedule.find();
+    
+    // 날짜 범위 필터링 (비용 절감을 위해 필요한 데이터만 조회)
+    if (start && end) {
+      query = query.where('start').gte(new Date(start)).lte(new Date(end));
+    } else if (start) {
+      query = query.where('start').gte(new Date(start));
+    } else if (end) {
+      query = query.where('start').lte(new Date(end));
+    }
+    
+    // 기본적으로 최근 3개월 데이터만 조회 (비용 절감)
+    if (!start && !end) {
+      const threeMonthsAgo = new Date();
+      threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+      query = query.where('start').gte(threeMonthsAgo);
+    }
+    
+    // populate 최소화 - 필요한 경우에만 사용
+    // userId가 있는 경우에만 populate (빈 참조 populate 방지)
+    query = query.populate({
+      path: 'userId',
+      select: 'username name',
+      match: { isActive: true } // 활성 사용자만
+    });
+    
+    // 정렬 및 제한
+    query = query.sort({ start: 1 }).limit(limit ? parseInt(limit) : 1000);
+    
+    const schedules = await query;
     res.json(schedules);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -864,7 +943,12 @@ app.get('/api/schedules/:id', async (req, res) => {
 // Get all popups
 app.get('/api/popups', async (req, res) => {
   try {
-    const popups = await Popup.find().populate('createdBy', 'username name').sort({ createdAt: -1 });
+    // 필요한 필드만 선택하여 데이터 전송량 감소
+    const popups = await Popup.find()
+      .select('title message imageUrl imageUrls isActive startDate endDate createdAt')
+      .populate('createdBy', 'username name')
+      .sort({ createdAt: -1 })
+      .limit(100); // 최대 100개로 제한
     res.json(popups);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -875,16 +959,20 @@ app.get('/api/popups', async (req, res) => {
 app.get('/api/popups/active', async (req, res) => {
   try {
     const now = new Date();
+    // lean() 사용으로 성능 향상 및 인덱스 활용
     const activePopup = await Popup.findOne({
       isActive: true,
       $or: [
         { startDate: { $lte: now }, endDate: { $gte: now } },
         { startDate: null, endDate: null }
       ]
-    }).sort({ createdAt: -1 });
+    })
+    .sort({ createdAt: -1 })
+    .lean(); // Mongoose 문서 대신 일반 객체 반환
     
-    res.json(activePopup);
+    res.json(activePopup || null); // null 반환으로 일관성 유지
   } catch (error) {
+    console.error('Active popup API error:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -1165,35 +1253,63 @@ app.delete('/api/trained-users/:id', authenticateToken, async (req, res) => {
 });
 
 // 지난 달 예약 데이터의 개인정보 삭제 (매일 자정 실행)
+// 최적화: 배치 업데이트 사용 및 필요한 필드만 조회
 const cleanupOldReservations = async () => {
   try {
     const now = new Date();
     const firstDayOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     
-    // 이번 달 이전의 예약들 찾기
+    // 이번 달 이전의 예약들 찾기 (notes 필드만 선택하여 데이터 전송량 감소)
     const oldReservations = await Schedule.find({
-      start: { $lt: firstDayOfCurrentMonth }
-    });
+      start: { $lt: firstDayOfCurrentMonth },
+      notes: { $exists: true, $ne: null, $ne: '' } // notes가 있는 것만
+    }).select('_id notes').lean(); // lean() 사용으로 메모리 사용량 감소
 
-    // 각 예약의 notes에서 개인정보 삭제
+    if (oldReservations.length === 0) {
+      console.log('No old reservations to clean up');
+      return;
+    }
+
+    // 배치 업데이트를 위한 배열 준비
+    const bulkOps = [];
+    
     for (const reservation of oldReservations) {
       try {
         const notes = JSON.parse(reservation.notes || '{}');
+        let hasChanges = false;
         
         // 개인정보 삭제
-        if (notes.department) delete notes.department;
-        if (notes.contact) delete notes.contact;
+        if (notes.department) {
+          delete notes.department;
+          hasChanges = true;
+        }
+        if (notes.contact) {
+          delete notes.contact;
+          hasChanges = true;
+        }
         
-        // 업데이트
-        reservation.notes = JSON.stringify(notes);
-        await reservation.save();
+        // 변경사항이 있으면 bulkOps에 추가
+        if (hasChanges) {
+          bulkOps.push({
+            updateOne: {
+              filter: { _id: reservation._id },
+              update: { $set: { notes: JSON.stringify(notes) } }
+            }
+          });
+        }
       } catch (e) {
         // notes가 JSON이 아닌 경우는 그냥 넘어감
         continue;
       }
     }
 
-    console.log(`Cleaned up personal info from ${oldReservations.length} old reservations`);
+    // 배치 업데이트 실행 (단일 쿼리로 모든 업데이트 수행)
+    if (bulkOps.length > 0) {
+      await Schedule.bulkWrite(bulkOps);
+      console.log(`Cleaned up personal info from ${bulkOps.length} old reservations`);
+    } else {
+      console.log('No personal info to clean up');
+    }
   } catch (error) {
     console.error('Cleanup error:', error);
   }

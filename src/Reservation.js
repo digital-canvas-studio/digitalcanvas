@@ -566,7 +566,18 @@ function Reservation() {
     const fetchReservations = async () => {
       try {
         setIsLoading(true);
-        const response = await api.get('/api/schedules');
+        // 최근 3개월 데이터만 조회 (비용 절감)
+        const threeMonthsAgo = new Date();
+        threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+        const futureDate = new Date();
+        futureDate.setMonth(futureDate.getMonth() + 3); // 미래 3개월까지
+        
+        const response = await api.get('/api/schedules', {
+          params: {
+            start: threeMonthsAgo.toISOString(),
+            end: futureDate.toISOString()
+          }
+        });
         const formattedEvents = response.data.map(formatEvent);
         setEvents(formattedEvents);
         
@@ -589,7 +600,18 @@ function Reservation() {
   const handleAddEvent = async () => {
     // 새로운 예약이 추가되었을 때 데이터를 다시 가져옴
     try {
-      const response = await api.get('/api/schedules');
+      // 최근 3개월 데이터만 조회 (비용 절감)
+      const threeMonthsAgo = new Date();
+      threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+      const futureDate = new Date();
+      futureDate.setMonth(futureDate.getMonth() + 3); // 미래 3개월까지
+      
+      const response = await api.get('/api/schedules', {
+        params: {
+          start: threeMonthsAgo.toISOString(),
+          end: futureDate.toISOString()
+        }
+      });
       const formattedEvents = response.data.map(formatEvent);
       setEvents(formattedEvents);
       

@@ -27,7 +27,19 @@ function Statistics() {
 
   const fetchSchedules = async () => {
     try {
-      const response = await api.get('/api/schedules');
+      // 선택된 월의 시작일과 종료일 계산
+      const year = selectedMonth.getFullYear();
+      const month = selectedMonth.getMonth();
+      const startDate = new Date(year, month, 1);
+      const endDate = new Date(year, month + 1, 0, 23, 59, 59); // 해당 월의 마지막 날
+      
+      // 날짜 범위를 지정하여 필요한 데이터만 조회 (비용 절감)
+      const response = await api.get('/api/schedules', {
+        params: {
+          start: startDate.toISOString(),
+          end: endDate.toISOString()
+        }
+      });
       const data = response.data;
       setSchedules(data);
       calculateStatistics(data);

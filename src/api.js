@@ -22,7 +22,8 @@ const getBaseURL = () => {
 
 // API 클라이언트 생성
 const api = axios.create({
-  baseURL: getBaseURL(), 
+  baseURL: getBaseURL(),
+  timeout: 30000, // 30초 타임아웃 (서버 cold start 대비)
 });
 
 // 요청 인터셉터: 로컬 스토리지에서 토큰을 가져와 모든 요청 헤더에 추가

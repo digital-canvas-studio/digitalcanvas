@@ -94,13 +94,20 @@ function Home() {
   });
 
   useEffect(() => {
-    fetchAbout();
-    fetchActivePopup();
+    // 병렬로 API 호출하여 로딩 시간 단축
+    Promise.all([
+      fetchAbout(),
+      fetchActivePopup()
+    ]).catch(error => {
+      console.error('Initial data fetch error:', error);
+    });
   }, []);
 
   const fetchActivePopup = async () => {
     try {
-      const response = await api.get('/api/popups/active');
+      const response = await api.get('/api/popups/active', {
+        timeout: 30000 // 30초 타임아웃
+      });
       const data = response.data;
       console.log('Loaded popup:', data);
       
@@ -130,7 +137,10 @@ function Home() {
         }
       }
     } catch (error) {
-      console.error('팝업 로드 실패:', error);
+      // 팝업 로드 실패는 치명적이지 않으므로 조용히 처리
+      if (error.code !== 'ECONNABORTED' && !error.message.includes('timeout')) {
+        console.error('팝업 로드 실패:', error);
+      }
     }
   };
 
@@ -202,10 +212,16 @@ function Home() {
   const fetchAbout = async () => {
     try {
       setIsLoading(true);
-      const response = await api.get('/api/abouts');
+      const response = await api.get('/api/abouts', {
+        timeout: 30000 // 30초 타임아웃
+      });
       setAbout(response.data);
     } catch (error) {
       console.error("About 데이터 로딩 실패:", error);
+      // 타임아웃이나 네트워크 오류 시 기본값 설정
+      if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+        console.warn('서버 응답 시간 초과 - 기본값 사용');
+      }
       if (error.response && error.response.status === 404) {
         setAbout({ title: '디지털도화서란?', content: '<p>누구나 자유롭게 창작하고, 디지털로 소통하는 열린 공간입니다.</p>' });
       } else {
