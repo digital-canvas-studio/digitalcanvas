@@ -326,6 +326,104 @@ function SpaceReservationForm({ onClose, onReservationAdded }) {
         ...formData.makerSpaceTypes
       ];
 
+      // 수리중 예약 체크 (3D프린터, 레이저각인기)
+      if (formData.makerSpaceTypes.length > 0) {
+        const maintenanceReservations = existingReservations.filter(reservation => {
+          // 제목에 "수리중"이 포함되어 있는지 확인
+          const isMaintenance = reservation.title && reservation.title.includes('수리중');
+          if (!isMaintenance) return false;
+
+          // 같은 날짜인지 확인
+          const reservationDate = new Date(reservation.start);
+          if (reservationDate.toDateString() !== requestStart.toDateString()) {
+            return false;
+          }
+
+          // 시간이 겹치는지 확인
+          const reservationStart = new Date(reservation.start);
+          const reservationEnd = new Date(reservation.end);
+          const timeOverlap = (
+            (requestStart >= reservationStart && requestStart < reservationEnd) ||
+            (requestEnd > reservationStart && requestEnd <= reservationEnd) ||
+            (requestStart <= reservationStart && requestEnd >= reservationEnd)
+          );
+
+          return timeOverlap;
+        });
+
+        // 수리중 예약이 있는 경우, 신청하려는 장비와 겹치는지 확인
+        for (const maintenanceReservation of maintenanceReservations) {
+          let maintenanceItems = [];
+          
+          try {
+            const notes = JSON.parse(maintenanceReservation.notes || '{}');
+            if (notes.makerSpaceTypes) {
+              maintenanceItems = notes.makerSpaceTypes;
+            }
+          } catch (e) {
+            // 기존 형식 확인 (equipment 필드 사용)
+            if (maintenanceReservation.equipment) {
+              maintenanceReservation.equipment.forEach(equipName => {
+                if (equipName.includes('3D프린터') || equipName.includes('3d프린터')) {
+                  maintenanceItems.push('3d-printer');
+                }
+                if (equipName.includes('레이저각인기') || equipName.includes('레이저')) {
+                  maintenanceItems.push('laser-engraver');
+                }
+              });
+            }
+          }
+
+          // 신청하려는 장비가 수리중인지 확인
+          const hasMaintenanceConflict = formData.makerSpaceTypes.some(requestedType => {
+            // 3D프린터 계열 체크
+            if (requestedType.includes('3d-printer') || requestedType.includes('printer')) {
+              return maintenanceItems.some(maintenanceItem => 
+                maintenanceItem.includes('3d-printer') || maintenanceItem.includes('printer')
+              );
+            }
+            // 레이저각인기 계열 체크
+            if (requestedType.includes('laser') || requestedType.includes('engraver')) {
+              return maintenanceItems.some(maintenanceItem => 
+                maintenanceItem.includes('laser') || maintenanceItem.includes('engraver')
+              );
+            }
+            return false;
+          });
+
+          if (hasMaintenanceConflict) {
+            // 수리중인 장비 이름 찾기
+            const maintenanceEquipmentNames = [];
+            formData.makerSpaceTypes.forEach(type => {
+              if (type.includes('3d-printer') || type.includes('printer')) {
+                const printerOption = makerSpaceOptions.find(opt => 
+                  opt.value.includes('3d-printer') || opt.value.includes('printer')
+                );
+                if (printerOption && !maintenanceEquipmentNames.includes(printerOption.label)) {
+                  maintenanceEquipmentNames.push(printerOption.label);
+                }
+              }
+              if (type.includes('laser') || type.includes('engraver')) {
+                const laserOption = makerSpaceOptions.find(opt => 
+                  opt.value.includes('laser') || opt.value.includes('engraver')
+                );
+                if (laserOption && !maintenanceEquipmentNames.includes(laserOption.label)) {
+                  maintenanceEquipmentNames.push(laserOption.label);
+                }
+              }
+            });
+
+            const equipmentList = maintenanceEquipmentNames.length > 0 
+              ? maintenanceEquipmentNames.join(', ')
+              : '해당 장비';
+            
+            alert(`${equipmentList}는 현재 수리중입니다. 예약이 불가능합니다.`);
+            setIsSubmitting(false);
+            return;
+          }
+        }
+      }
+
       // 중복 체크
       const hasConflict = existingReservations.some(reservation => {
         const reservationStart = new Date(reservation.start);

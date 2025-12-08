@@ -252,8 +252,11 @@ const ReservationForm = ({ onAddEvent }) => {
             value={formData.name}
             onChange={handleInputChange}
             className="form-input"
-            placeholder="예약자 이름 (선택사항)"
+            placeholder="예약자 이름 또는 '수리중' 입력 (선택사항)"
           />
+          <small style={{color: '#666', fontSize: '0.85em', marginTop: '0.25rem', display: 'block'}}>
+            💡 수리중 예약을 등록하려면 이름에 '수리중'을 입력하고 해당 장비를 선택하세요.
+          </small>
         </div>
 
         <div className="form-section">
