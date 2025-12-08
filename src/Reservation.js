@@ -30,12 +30,12 @@ const renderEventContent = (eventInfo) => {
   );
 };
 
-// 30분 단위 시간 옵션을 생성하는 헬퍼 함수 (관리자용: 9시~22시)
+// 30분 단위 시간 옵션을 생성하는 헬퍼 함수 (관리자용: 9시~17시)
 const generateTimeOptions = () => {
   const options = [];
-  for (let h = 9; h <= 22; h++) {
+  for (let h = 9; h <= 17; h++) {
     for (let m = 0; m < 60; m += 30) {
-      if (h === 22 && m > 0) continue; // 22:00 까지만 포함
+      if (h === 17 && m > 0) continue; // 17:00 까지만 포함
       const hour = h.toString().padStart(2, '0');
       const minute = m.toString().padStart(2, '0');
       options.push(`${hour}:${minute}`);
@@ -83,9 +83,15 @@ const ReservationForm = ({ onAddEvent }) => {
     { value: 'laptop', label: '노트북' }
   ];
 
+  // 2025년 1월 1일부터 3D프린터02 추가
+  const currentDate = new Date();
+  const january2025 = new Date(2025, 0, 1); // 2025년 1월 1일
+  const isAfterJanuary2025 = currentDate >= january2025;
+  
   const defaultMakerSpaceOptions = [
     { value: '3d-printer-01', label: '3D프린터01' },
-    { value: 'laser-engraver', label: '레이저각인기' }
+    { value: 'laser-engraver', label: '레이저각인기' },
+    ...(isAfterJanuary2025 ? [{ value: '3d-printer-02', label: '3D프린터02' }] : [])
   ];
 
   // 옵션 로드
@@ -438,6 +444,7 @@ function Reservation() {
       
       // 메이커스페이스 - 구분되는 색상
       '3D프린터01': '#9B59B6', // 보라
+      '3D프린터02': '#8E44AD', // 진한 보라
       '레이저각인기': '#E74C3C', // 빨강
     };
     
@@ -463,7 +470,7 @@ function Reservation() {
     
     // 첫 번째 항목의 색상을 사용 (우선순위: 메이커스페이스 > 장비 > 공간)
     const makerSpaceItems = reservationDetails.filter(item => 
-      ['3D프린터01', '레이저각인기'].includes(item)
+      ['3D프린터01', '3D프린터02', '레이저각인기'].includes(item)
     );
     const equipmentItems = reservationDetails.filter(item => 
       ['니콘 DSLR 카메라', '소니 캠코더', '360 카메라(교내연구소만 가능)', 
@@ -524,8 +531,14 @@ function Reservation() {
     const detailsText = reservationDetails.join(', ');
 
     // 제목 생성: 시간 + 내역 + 연락처
+    // 수리중 예약인지 확인
+    const isMaintenance = reservation.title && reservation.title.includes('수리중');
+    
     let title = '';
-    if (isPastDate && userInfo.name) {
+    if (isMaintenance) {
+      // 수리중 예약은 명확하게 표시
+      title = `🔧 수리중 - ${startTime}-${endTime} ${detailsText}`;
+    } else if (isPastDate && userInfo.name) {
       // 지난 날짜는 이름 마스킹
       const maskedName = userInfo.name.length > 2 
         ? userInfo.name.charAt(0) + '*'.repeat(userInfo.name.length - 2) + userInfo.name.charAt(userInfo.name.length - 1)
@@ -542,7 +555,8 @@ function Reservation() {
     }
 
     // 예약 항목들로부터 색상 결정
-    const eventColor = getEventColor(reservationDetails);
+    // 수리중 예약은 회색으로 표시
+    const eventColor = isMaintenance ? '#808080' : getEventColor(reservationDetails);
 
     return {
       id: reservation._id,
@@ -817,7 +831,7 @@ function Reservation() {
         }}
         allDaySlot={false}
         slotMinTime="09:00:00"
-        slotMaxTime="19:00:00"
+        slotMaxTime="18:00:00"
         height="auto"
         displayEventTime={false}
         eventContent={renderEventContent}
@@ -843,7 +857,7 @@ function Reservation() {
               // 기본 옵션 정의 (label로 카테고리 판단용)
               const spaceLabels = ['이메리얼룸01', '이메리얼룸02', '창작방앗간', '공존', '휴관'];
               const equipmentLabels = ['니콘 DSLR 카메라', '소니 캠코더', '360 카메라(교내연구소만 가능)', 'LED 조명', '줌 사운드 레코더', '현장답사용 마이크리시버', '전자칠판', '노트북'];
-              const makerSpaceLabels = ['3D프린터01', '레이저각인기'];
+              const makerSpaceLabels = ['3D프린터01', '3D프린터02', '레이저각인기'];
               
               // reservation.spaces를 카테고리별로 분류
               const spaces = reservation.spaces ? reservation.spaces.filter(item => spaceLabels.includes(item)) : [];

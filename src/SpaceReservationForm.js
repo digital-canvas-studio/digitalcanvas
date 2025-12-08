@@ -44,9 +44,15 @@ function SpaceReservationForm({ onClose, onReservationAdded }) {
     { value: 'laptop', label: '노트북' }
   ];
 
+  // 2025년 1월 1일부터 3D프린터02 추가
+  const currentDate = new Date();
+  const january2025 = new Date(2025, 0, 1); // 2025년 1월 1일
+  const isAfterJanuary2025 = currentDate >= january2025;
+  
   const defaultMakerSpaceOptions = [
     { value: '3d-printer-01', label: '3D프린터01' },
-    { value: 'laser-engraver', label: '레이저각인기' }
+    { value: 'laser-engraver', label: '레이저각인기' },
+    ...(isAfterJanuary2025 ? [{ value: '3d-printer-02', label: '3D프린터02' }] : [])
   ];
 
   // 옵션 로드
@@ -101,12 +107,12 @@ function SpaceReservationForm({ onClose, onReservationAdded }) {
     fetchOptions();
   }, []);
 
-  // 시간 옵션 생성 (30분 단위, 오전 10시부터 시작)
+  // 시간 옵션 생성 (30분 단위, 오전 10시부터 오후 5시까지)
   const generateTimeOptions = () => {
     const options = [];
-    for (let hour = 10; hour <= 18; hour++) {
+    for (let hour = 10; hour <= 17; hour++) {
       for (let minute = 0; minute < 60; minute += 30) {
-        if (hour === 18 && minute > 0) continue; // 18:00까지만
+        if (hour === 17 && minute > 0) continue; // 17:00까지만
         const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
         const displayTime = hour < 12 ? `오전 ${hour}:${minute.toString().padStart(2, '0')}` : 
                            hour === 12 ? `오후 12:${minute.toString().padStart(2, '0')}` : 
@@ -242,6 +248,17 @@ function SpaceReservationForm({ onClose, onReservationAdded }) {
     
     if (dayOfWeek === 0 || dayOfWeek === 6) {
       alert('디지털도화서는 주말과 공휴일에는 운영하지 않습니다.');
+      return;
+    }
+
+    // 2025년 1월 1일부터 금요일 점검일 제한 (관리자 제외)
+    const currentDate = new Date();
+    const january2025 = new Date(2025, 0, 1); // 2025년 1월 1일
+    const isAfterJanuary2025 = currentDate >= january2025;
+    
+    if (isAfterJanuary2025 && dayOfWeek === 5 && (!user || user.role !== 'admin')) {
+      // 금요일(5)이고 관리자가 아닌 경우
+      alert('금요일은 점검일로 관리자 외에는 예약할 수 없습니다.');
       return;
     }
 

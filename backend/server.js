@@ -1100,10 +1100,23 @@ app.get('/api/reservation-options', async (req, res) => {
         { value: 'electronic-board', label: '전자칠판', category: 'equipment', isDefault: true },
         { value: 'laptop', label: '노트북', category: 'equipment', isDefault: true }
       ],
-      makerspace: [
-        { value: '3d-printer-01', label: '3D프린터01', category: 'makerspace', isDefault: true },
-        { value: 'laser-engraver', label: '레이저각인기', category: 'makerspace', isDefault: true }
-      ]
+      makerspace: (() => {
+        // 2025년 1월 1일부터 3D프린터02 추가
+        const currentDate = new Date();
+        const january2025 = new Date(2025, 0, 1); // 2025년 1월 1일
+        const isAfterJanuary2025 = currentDate >= january2025;
+        
+        const baseOptions = [
+          { value: '3d-printer-01', label: '3D프린터01', category: 'makerspace', isDefault: true },
+          { value: 'laser-engraver', label: '레이저각인기', category: 'makerspace', isDefault: true }
+        ];
+        
+        if (isAfterJanuary2025) {
+          baseOptions.push({ value: '3d-printer-02', label: '3D프린터02', category: 'makerspace', isDefault: true });
+        }
+        
+        return baseOptions;
+      })()
     };
 
     // 카테고리별로 기본 항목과 DB 항목 합치기
