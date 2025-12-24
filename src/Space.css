@@ -16,6 +16,8 @@
   cursor: pointer;
   display: block;
   position: relative;
+  z-index: 1;
+  pointer-events: auto;
 }
 
 .space-item:hover {

@@ -494,8 +494,11 @@ app.get('/api/programs/:id', async (req, res) => {
       return res.status(400).json({ error: 'Invalid program ID' });
     }
     
-    const program = await Program.findById(req.params.id);
+    // findById 대신 findOne 사용 (더 유연함)
+    const program = await Program.findOne({ _id: req.params.id });
     if (!program) {
+      // 디버깅: 실제로 어떤 ID가 요청되었는지 로그
+      console.error(`[DEBUG] Program not found with ID: ${req.params.id}`);
       return res.status(404).json({ error: 'Program not found' });
     }
     res.json(program);
@@ -601,8 +604,10 @@ app.get('/api/spaces/:id', async (req, res) => {
       return res.status(400).json({ error: 'Invalid space ID' });
     }
     
-    const space = await Space.findById(req.params.id);
+    // findById 대신 findOne 사용 (더 유연함)
+    const space = await Space.findOne({ _id: req.params.id });
     if (!space) {
+      console.error(`[DEBUG] Space not found with ID: ${req.params.id}`);
       return res.status(404).json({ error: 'Space not found' });
     }
     res.json(space);
@@ -816,8 +821,10 @@ app.get('/api/notices/:id', async (req, res) => {
       return res.status(400).json({ error: 'Invalid notice ID' });
     }
     
-    const notice = await Notice.findById(req.params.id);
+    // findById 대신 findOne 사용 (더 유연함)
+    const notice = await Notice.findOne({ _id: req.params.id });
     if (!notice) {
+      console.error(`[DEBUG] Notice not found with ID: ${req.params.id}`);
       return res.status(404).json({ error: 'Notice not found' });
     }
     res.json(notice);

@@ -20,6 +20,10 @@
   padding: 1.25rem 1.5rem;
   text-decoration: none;
   color: inherit;
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+  pointer-events: auto;
 }
 
 .notice-date {
