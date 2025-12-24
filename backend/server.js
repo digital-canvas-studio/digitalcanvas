@@ -866,10 +866,10 @@ app.get('/api/schedules', async (req, res) => {
     
     // populate 최소화 - 필요한 경우에만 사용
     // userId가 있는 경우에만 populate (빈 참조 populate 방지)
+    // match 조건 제거: match는 참조된 문서를 필터링하므로 원본 문서가 사라질 수 있음
     query = query.populate({
       path: 'userId',
-      select: 'username name',
-      match: { isActive: true } // 활성 사용자만
+      select: 'username name'
     });
     
     // 정렬 및 제한
