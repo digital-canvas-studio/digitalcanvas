@@ -861,7 +861,7 @@ app.get('/api/schedules', async (req, res) => {
       };
     }
     
-    // 쿼리 생성
+    // 쿼리 생성 - Mongoose find()에 직접 조건 전달
     let query = Schedule.find(dateFilter);
     
     // populate 최소화 - 필요한 경우에만 사용
@@ -877,6 +877,13 @@ app.get('/api/schedules', async (req, res) => {
     query = query.sort({ start: 1 }).limit(limit ? parseInt(limit) : 1000);
     
     const schedules = await query;
+    
+    // 디버깅: 쿼리 결과 로깅 (개발 환경에서만)
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[DEBUG] /api/schedules - dateFilter:`, JSON.stringify(dateFilter));
+      console.log(`[DEBUG] /api/schedules - 결과 개수:`, schedules.length);
+    }
+    
     res.json(schedules);
   } catch (error) {
     res.status(500).json({ error: error.message });
