@@ -7,7 +7,9 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "build": "echo 'No build step required for Node.js backend'",
-    "ping-server": "node ping-server.js"
+    "ping-server": "node ping-server.js",
+    "backup-db": "node backup-db-node.js",
+    "restore-db": "node restore-db-node.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
