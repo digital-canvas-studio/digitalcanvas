@@ -489,12 +489,18 @@ app.put('/api/programs/:id', async (req, res) => {
 // Get single program by ID
 app.get('/api/programs/:id', async (req, res) => {
   try {
+    // ObjectId 유효성 검사
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: 'Invalid program ID' });
+    }
+    
     const program = await Program.findById(req.params.id);
     if (!program) {
       return res.status(404).json({ error: 'Program not found' });
     }
     res.json(program);
   } catch (error) {
+    console.error('Error fetching program:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -590,12 +596,18 @@ app.delete('/api/spaces/:id', async (req, res) => {
 // Get single space by ID
 app.get('/api/spaces/:id', async (req, res) => {
   try {
+    // ObjectId 유효성 검사
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: 'Invalid space ID' });
+    }
+    
     const space = await Space.findById(req.params.id);
     if (!space) {
       return res.status(404).json({ error: 'Space not found' });
     }
     res.json(space);
   } catch (error) {
+    console.error('Error fetching space:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -799,12 +811,18 @@ app.put('/api/about', async (req, res) => {
 // Get single notice by ID
 app.get('/api/notices/:id', async (req, res) => {
   try {
+    // ObjectId 유효성 검사
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: 'Invalid notice ID' });
+    }
+    
     const notice = await Notice.findById(req.params.id);
     if (!notice) {
       return res.status(404).json({ error: 'Notice not found' });
     }
     res.json(notice);
   } catch (error) {
+    console.error('Error fetching notice:', error);
     res.status(500).json({ error: error.message });
   }
 });
