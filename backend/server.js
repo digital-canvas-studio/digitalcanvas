@@ -814,24 +814,55 @@ app.get('/api/schedules', async (req, res) => {
   try {
     const { start, end, limit } = req.query;
     
-    // 쿼리 빌더 생성
-    let query = Schedule.find();
+    // 날짜 범위 필터링 조건 생성
+    // start 필드가 문자열로 저장된 경우도 처리 (ISO 문자열은 사전식 정렬 가능)
+    let dateFilter = {};
     
-    // 날짜 범위 필터링 (비용 절감을 위해 필요한 데이터만 조회)
     if (start && end) {
-      query = query.where('start').gte(new Date(start)).lte(new Date(end));
+      const startDate = new Date(start);
+      const endDate = new Date(end);
+      const startDateStr = startDate.toISOString();
+      const endDateStr = endDate.toISOString();
+      // 문자열과 Date 모두 처리
+      dateFilter = {
+        $or: [
+          { start: { $gte: startDate, $lte: endDate } },
+          { start: { $gte: startDateStr, $lte: endDateStr } }
+        ]
+      };
     } else if (start) {
-      query = query.where('start').gte(new Date(start));
+      const startDate = new Date(start);
+      const startDateStr = startDate.toISOString();
+      dateFilter = {
+        $or: [
+          { start: { $gte: startDate } },
+          { start: { $gte: startDateStr } }
+        ]
+      };
     } else if (end) {
-      query = query.where('start').lte(new Date(end));
-    }
-    
-    // 기본적으로 최근 3개월 데이터만 조회 (비용 절감)
-    if (!start && !end) {
+      const endDate = new Date(end);
+      const endDateStr = endDate.toISOString();
+      dateFilter = {
+        $or: [
+          { start: { $lte: endDate } },
+          { start: { $lte: endDateStr } }
+        ]
+      };
+    } else {
+      // 기본적으로 최근 3개월 데이터만 조회 (비용 절감)
       const threeMonthsAgo = new Date();
       threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
-      query = query.where('start').gte(threeMonthsAgo);
+      const threeMonthsAgoStr = threeMonthsAgo.toISOString();
+      dateFilter = {
+        $or: [
+          { start: { $gte: threeMonthsAgo } },
+          { start: { $gte: threeMonthsAgoStr } }
+        ]
+      };
     }
+    
+    // 쿼리 생성
+    let query = Schedule.find(dateFilter);
     
     // populate 최소화 - 필요한 경우에만 사용
     // userId가 있는 경우에만 populate (빈 참조 populate 방지)
@@ -842,6 +873,7 @@ app.get('/api/schedules', async (req, res) => {
     });
     
     // 정렬 및 제한
+    // start 필드가 문자열인 경우도 정렬 가능 (ISO 형식)
     query = query.sort({ start: 1 }).limit(limit ? parseInt(limit) : 1000);
     
     const schedules = await query;
