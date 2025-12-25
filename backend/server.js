@@ -119,7 +119,7 @@ const spaceSchema = new mongoose.Schema({
   capacity: Number,
   equipment: [String],
   status: String
-});
+}, { collection: 'spaces' }); // spaces 컬렉션 명시
 
 const noticeSchema = new mongoose.Schema({
   title: String,
@@ -128,7 +128,7 @@ const noticeSchema = new mongoose.Schema({
   createdAt: Date,
   category: String,
   status: String
-});
+}, { collection: 'notices' }); // notices 컬렉션 명시
 
 // 인덱스 추가
 noticeSchema.index({ createdAt: -1 }); // 최신순 정렬 최적화
@@ -205,9 +205,9 @@ popupSchema.index({ isActive: 1, startDate: 1, endDate: 1 }); // 활성 팝업 �
 popupSchema.index({ createdAt: -1 }); // 최신순 정렬 최적화
 
 // MongoDB Models
-const Program = mongoose.model('Program', programSchema, 'program');
-const Space = mongoose.model('Space', spaceSchema);
-const Notice = mongoose.model('Notice', noticeSchema);
+const Program = mongoose.model('Program', programSchema, 'program'); // program 컬렉션
+const Space = mongoose.model('Space', spaceSchema, 'spaces'); // spaces 컬렉션
+const Notice = mongoose.model('Notice', noticeSchema, 'notices'); // notices 컬렉션
 const About = mongoose.model('About', aboutSchema, 'abouts');
 const User = mongoose.model('User', userSchema, 'users');
 const Schedule = mongoose.model('Schedule', scheduleSchema, 'schedules');
