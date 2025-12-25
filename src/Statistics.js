@@ -54,8 +54,19 @@ function Statistics() {
 
     // 해당 월의 예약만 필터링
     const monthSchedules = data.filter(schedule => {
-      const scheduleDate = new Date(schedule.start);
-      return scheduleDate.getFullYear() === year && scheduleDate.getMonth() === month;
+      // start 필드가 없거나 유효하지 않은 경우 제외
+      if (!schedule.start) return false;
+      
+      try {
+        const scheduleDate = new Date(schedule.start);
+        // 유효한 날짜인지 확인
+        if (isNaN(scheduleDate.getTime())) return false;
+        
+        return scheduleDate.getFullYear() === year && scheduleDate.getMonth() === month;
+      } catch (e) {
+        console.warn('Invalid date in schedule:', schedule.start, e);
+        return false;
+      }
     });
 
     // 주차별, 카테고리별 통계
@@ -68,7 +79,18 @@ function Statistics() {
     };
 
     monthSchedules.forEach(schedule => {
-      const scheduleDate = new Date(schedule.start);
+      // start 필드가 없으면 건너뛰기
+      if (!schedule.start) return;
+      
+      let scheduleDate;
+      try {
+        scheduleDate = new Date(schedule.start);
+        if (isNaN(scheduleDate.getTime())) return;
+      } catch (e) {
+        console.warn('Invalid date in schedule:', schedule.start, e);
+        return;
+      }
+      
       const weekNumber = getWeekOfMonth(scheduleDate);
       const weekKey = `week${weekNumber}`;
 
@@ -212,8 +234,17 @@ function Statistics() {
     const month = selectedMonth.getMonth();
 
     const monthSchedules = schedules.filter(schedule => {
-      const scheduleDate = new Date(schedule.start);
-      return scheduleDate.getFullYear() === year && scheduleDate.getMonth() === month;
+      // start 필드가 없거나 유효하지 않은 경우 제외
+      if (!schedule.start) return false;
+      
+      try {
+        const scheduleDate = new Date(schedule.start);
+        if (isNaN(scheduleDate.getTime())) return false;
+        
+        return scheduleDate.getFullYear() === year && scheduleDate.getMonth() === month;
+      } catch (e) {
+        return false;
+      }
     });
 
     const spaceStats = {};
@@ -222,7 +253,17 @@ function Statistics() {
     const validSpaceNames = ['이메리얼룸01', '이메리얼룸02', '창작방앗간', '공존'];
 
     monthSchedules.forEach(schedule => {
-      const scheduleDate = new Date(schedule.start);
+      // start 필드가 없으면 건너뛰기
+      if (!schedule.start) return;
+      
+      let scheduleDate;
+      try {
+        scheduleDate = new Date(schedule.start);
+        if (isNaN(scheduleDate.getTime())) return;
+      } catch (e) {
+        return;
+      }
+      
       const weekNumber = getWeekOfMonth(scheduleDate);
       const weekKey = `week${weekNumber}`;
 
