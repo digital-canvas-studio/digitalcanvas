@@ -113,13 +113,14 @@ programSchema.index({ startDate: -1 }); // 시작일 기준 정렬 최적화
 programSchema.index({ status: 1 }); // 상태별 필터링 최적화
 
 const spaceSchema = new mongoose.Schema({
+  _id: String, // _id를 String으로 명시
   title: String,
   content: String,
   thumbnailUrl: String,
   capacity: Number,
   equipment: [String],
   status: String
-}, { collection: 'spaces' }); // spaces 컬렉션 명시
+}, { collection: 'spaces', _id: true }); // spaces 컬렉션 명시
 
 const noticeSchema = new mongoose.Schema({
   title: String,
@@ -496,14 +497,10 @@ app.put('/api/programs/:id', async (req, res) => {
 // Get single program by ID
 app.get('/api/programs/:id', async (req, res) => {
   try {
-    // ObjectId 유효성 검사
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      console.error(`[DEBUG] Invalid Program ID: ${req.params.id}`);
-      return res.status(400).json({ error: 'Invalid program ID' });
-    }
+    // _id가 String으로 저장되어 있으므로 직접 MongoDB 드라이버 사용
+    const db = mongoose.connection.db;
+    const program = await db.collection('program').findOne({ _id: req.params.id });
     
-    // findById 사용 (Mongoose가 자동으로 ObjectId로 변환)
-    const program = await Program.findById(req.params.id);
     if (!program) {
       console.error(`[DEBUG] Program not found with ID: ${req.params.id}`);
       return res.status(404).json({ error: 'Program not found' });
@@ -606,14 +603,10 @@ app.delete('/api/spaces/:id', async (req, res) => {
 // Get single space by ID
 app.get('/api/spaces/:id', async (req, res) => {
   try {
-    // ObjectId 유효성 검사
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      console.error(`[DEBUG] Invalid Space ID: ${req.params.id}`);
-      return res.status(400).json({ error: 'Invalid space ID' });
-    }
+    // _id가 String으로 저장되어 있으므로 직접 MongoDB 드라이버 사용
+    const db = mongoose.connection.db;
+    const space = await db.collection('spaces').findOne({ _id: req.params.id });
     
-    // findById 사용 (Mongoose가 자동으로 ObjectId로 변환)
-    const space = await Space.findById(req.params.id);
     if (!space) {
       console.error(`[DEBUG] Space not found with ID: ${req.params.id}`);
       return res.status(404).json({ error: 'Space not found' });
@@ -824,14 +817,10 @@ app.put('/api/about', async (req, res) => {
 // Get single notice by ID
 app.get('/api/notices/:id', async (req, res) => {
   try {
-    // ObjectId 유효성 검사
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      console.error(`[DEBUG] Invalid Notice ID: ${req.params.id}`);
-      return res.status(400).json({ error: 'Invalid notice ID' });
-    }
+    // _id가 String으로 저장되어 있으므로 직접 MongoDB 드라이버 사용
+    const db = mongoose.connection.db;
+    const notice = await db.collection('notices').findOne({ _id: req.params.id });
     
-    // findById 사용 (Mongoose가 자동으로 ObjectId로 변환)
-    const notice = await Notice.findById(req.params.id);
     if (!notice) {
       console.error(`[DEBUG] Notice not found with ID: ${req.params.id}`);
       return res.status(404).json({ error: 'Notice not found' });
