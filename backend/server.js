@@ -29,25 +29,32 @@ app.use(cors({
 app.use(express.json());
 
 // MongoDB Connection (with connection pool)
-// 연결을 비동기로 처리하여 서버 시작 시간 단축
+// 개발 환경에서는 연결 완료 후 서버 시작
 let mongoConnected = false;
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  maxPoolSize: 5, // 동시에 최대 5개 커넥션 유지 (비용 절감)
-  minPoolSize: 1, // 최소 1개 커넥션 유지
-  serverSelectionTimeoutMS: 5000, // 서버 선택 타임아웃 5초
-  socketTimeoutMS: 45000, // 소켓 타임아웃 45초
-  connectTimeoutMS: 10000, // 연결 타임아웃 10초
-})
-.then(() => {
-  mongoConnected = true;
-  console.log('Successfully connected to MongoDB (with connection pool)');
-})
-.catch(err => {
-  console.error('Could not connect to MongoDB', err);
-  // 연결 실패해도 서버는 계속 실행 (재연결 시도)
-});
+
+const connectMongoDB = async () => {
+  try {
+    await mongoose.connect(process.env.MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      maxPoolSize: 5, // 동시에 최대 5개 커넥션 유지 (비용 절감)
+      minPoolSize: 1, // 최소 1개 커넥션 유지
+      serverSelectionTimeoutMS: 5000, // 서버 선택 타임아웃 5초
+      socketTimeoutMS: 45000, // 소켓 타임아웃 45초
+      connectTimeoutMS: 10000, // 연결 타임아웃 10초
+    });
+    mongoConnected = true;
+    console.log('Successfully connected to MongoDB (with connection pool)');
+    return true;
+  } catch (err) {
+    console.error('Could not connect to MongoDB', err);
+    // 개발 환경에서는 연결 실패 시 서버 시작 중단
+    if (process.env.NODE_ENV !== 'production') {
+      throw err;
+    }
+    return false;
+  }
+};
 
 // MongoDB 연결 상태 확인 미들웨어 (선택적)
 const checkMongoConnection = (req, res, next) => {
@@ -1420,8 +1427,17 @@ const scheduleCleanup = () => {
 
 scheduleCleanup();
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log('Personal info cleanup scheduler activated');
-});
+// 서버 시작 - MongoDB 연결 완료 후 시작
+(async () => {
+  try {
+    await connectMongoDB();
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+      console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log('Personal info cleanup scheduler activated');
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+})();
