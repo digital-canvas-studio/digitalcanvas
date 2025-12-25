@@ -841,6 +841,7 @@ app.get('/api/schedules', async (req, res) => {
     
     // 날짜 범위 필터링 조건 생성
     // start 필드가 문자열로 저장된 경우도 처리 (ISO 문자열은 사전식 정렬 가능)
+    // start 필드가 없는 데이터도 포함 (다른 스키마 형식 지원)
     let dateFilter = {};
     
     if (start && end) {
@@ -848,11 +849,13 @@ app.get('/api/schedules', async (req, res) => {
       const endDate = new Date(end);
       const startDateStr = startDate.toISOString();
       const endDateStr = endDate.toISOString();
-      // 문자열과 Date 모두 처리
+      // 문자열과 Date 모두 처리, start 필드가 없는 데이터도 포함
       dateFilter = {
         $or: [
           { start: { $gte: startDate, $lte: endDate } },
-          { start: { $gte: startDateStr, $lte: endDateStr } }
+          { start: { $gte: startDateStr, $lte: endDateStr } },
+          { start: { $exists: false } },
+          { start: null }
         ]
       };
     } else if (start) {
@@ -861,7 +864,9 @@ app.get('/api/schedules', async (req, res) => {
       dateFilter = {
         $or: [
           { start: { $gte: startDate } },
-          { start: { $gte: startDateStr } }
+          { start: { $gte: startDateStr } },
+          { start: { $exists: false } },
+          { start: null }
         ]
       };
     } else if (end) {
@@ -870,18 +875,19 @@ app.get('/api/schedules', async (req, res) => {
       dateFilter = {
         $or: [
           { start: { $lte: endDate } },
-          { start: { $lte: endDateStr } }
+          { start: { $lte: endDateStr } },
+          { start: { $exists: false } },
+          { start: null }
         ]
       };
     } else {
-      // 기본적으로 최근 3개월 데이터만 조회 (비용 절감)
-      const threeMonthsAgo = new Date();
-      threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
-      const threeMonthsAgoStr = threeMonthsAgo.toISOString();
+      // start/end 파라미터가 없으면 모든 데이터 조회 (test 데이터베이스의 schedules 컬렉션 전체)
+      // start 필드가 없는 데이터도 포함
       dateFilter = {
         $or: [
-          { start: { $gte: threeMonthsAgo } },
-          { start: { $gte: threeMonthsAgoStr } }
+          { start: { $exists: true, $ne: null } }, // start 필드가 있는 모든 데이터
+          { start: { $exists: false } }, // start 필드가 없는 데이터
+          { start: null } // start가 null인 데이터
         ]
       };
     }
@@ -899,7 +905,8 @@ app.get('/api/schedules', async (req, res) => {
     
     // 정렬 및 제한
     // start 필드가 문자열인 경우도 정렬 가능 (ISO 형식)
-    query = query.sort({ start: 1 }).limit(limit ? parseInt(limit) : 1000);
+    // start 필드가 없는 경우 createdAt으로 정렬
+    query = query.sort({ start: 1, createdAt: -1 }).limit(limit ? parseInt(limit) : 10000);
     
     const schedules = await query;
     

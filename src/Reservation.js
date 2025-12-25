@@ -583,16 +583,11 @@ function Reservation() {
     const fetchReservations = async () => {
       try {
         setIsLoading(true);
-        // 최근 3개월 데이터만 조회 (비용 절감)
-        const threeMonthsAgo = new Date();
-        threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
-        const futureDate = new Date();
-        futureDate.setMonth(futureDate.getMonth() + 3); // 미래 3개월까지
-        
+        // 모든 예약 데이터 조회 (test 데이터베이스의 schedules 컬렉션 전체)
+        // 날짜 필터 없이 모든 데이터 가져오기
         const response = await api.get('/api/schedules', {
           params: {
-            start: threeMonthsAgo.toISOString(),
-            end: futureDate.toISOString()
+            // start, end 파라미터 제거하여 모든 데이터 조회
           }
         });
         const formattedEvents = response.data.map(formatEvent);
