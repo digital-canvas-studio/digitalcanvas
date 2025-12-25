@@ -498,13 +498,13 @@ app.get('/api/programs/:id', async (req, res) => {
   try {
     // ObjectId 유효성 검사
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      console.error(`[DEBUG] Invalid Program ID: ${req.params.id}`);
       return res.status(400).json({ error: 'Invalid program ID' });
     }
     
-    // findById 대신 findOne 사용 (더 유연함)
-    const program = await Program.findOne({ _id: req.params.id });
+    // findById 사용 (Mongoose가 자동으로 ObjectId로 변환)
+    const program = await Program.findById(req.params.id);
     if (!program) {
-      // 디버깅: 실제로 어떤 ID가 요청되었는지 로그
       console.error(`[DEBUG] Program not found with ID: ${req.params.id}`);
       return res.status(404).json({ error: 'Program not found' });
     }
@@ -608,11 +608,12 @@ app.get('/api/spaces/:id', async (req, res) => {
   try {
     // ObjectId 유효성 검사
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      console.error(`[DEBUG] Invalid Space ID: ${req.params.id}`);
       return res.status(400).json({ error: 'Invalid space ID' });
     }
     
-    // findById 대신 findOne 사용 (더 유연함)
-    const space = await Space.findOne({ _id: req.params.id });
+    // findById 사용 (Mongoose가 자동으로 ObjectId로 변환)
+    const space = await Space.findById(req.params.id);
     if (!space) {
       console.error(`[DEBUG] Space not found with ID: ${req.params.id}`);
       return res.status(404).json({ error: 'Space not found' });
@@ -825,11 +826,12 @@ app.get('/api/notices/:id', async (req, res) => {
   try {
     // ObjectId 유효성 검사
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      console.error(`[DEBUG] Invalid Notice ID: ${req.params.id}`);
       return res.status(400).json({ error: 'Invalid notice ID' });
     }
     
-    // findById 대신 findOne 사용 (더 유연함)
-    const notice = await Notice.findOne({ _id: req.params.id });
+    // findById 사용 (Mongoose가 자동으로 ObjectId로 변환)
+    const notice = await Notice.findById(req.params.id);
     if (!notice) {
       console.error(`[DEBUG] Notice not found with ID: ${req.params.id}`);
       return res.status(404).json({ error: 'Notice not found' });
