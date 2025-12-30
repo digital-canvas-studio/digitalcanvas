@@ -243,7 +243,7 @@ app.put('/api/abouts', async (req, res) => {
 // TrainedUser Schema (교육 이수자)
 const trainedUserSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  equipmentType: { type: String, required: true, enum: ['3d-printer-01', 'laser-engraver'] },
+  equipmentType: { type: String, required: true, enum: ['3d-printer-01', '3d-printer-02', 'laser-engraver'] },
   registeredAt: { type: Date, default: Date.now },
   registeredBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 }, { collection: 'resistorName' });
@@ -1290,6 +1290,13 @@ app.post('/api/trained-users/check', async (req, res) => {
         name,
         equipmentType: { $in: ['3d-printer-01', '3d-printer-02'] }
       });
+      
+      // 디버깅 로그
+      console.log(`[이수자 체크] 이름: ${name}, 장비: ${equipmentType}, 결과: ${trainedUser ? '이수함' : '이수 안함'}`);
+      if (trainedUser) {
+        console.log(`[이수자 체크] 찾은 이수자 - 이름: ${trainedUser.name}, 장비: ${trainedUser.equipmentType}`);
+      }
+      
       res.json({ isTrained: !!trainedUser });
     } else {
       // 다른 장비는 기존 로직대로 정확히 일치하는 것만 확인
