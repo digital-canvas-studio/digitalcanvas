@@ -1283,8 +1283,19 @@ app.get('/api/trained-users/:equipmentType', async (req, res) => {
 app.post('/api/trained-users/check', async (req, res) => {
   try {
     const { name, equipmentType } = req.body;
-    const trainedUser = await TrainedUser.findOne({ name, equipmentType });
-    res.json({ isTrained: !!trainedUser });
+    
+    // 3D프린터 01 또는 02인 경우, 둘 중 하나라도 이수했으면 허용
+    if (equipmentType === '3d-printer-01' || equipmentType === '3d-printer-02') {
+      const trainedUser = await TrainedUser.findOne({
+        name,
+        equipmentType: { $in: ['3d-printer-01', '3d-printer-02'] }
+      });
+      res.json({ isTrained: !!trainedUser });
+    } else {
+      // 다른 장비는 기존 로직대로 정확히 일치하는 것만 확인
+      const trainedUser = await TrainedUser.findOne({ name, equipmentType });
+      res.json({ isTrained: !!trainedUser });
+    }
   } catch (error) {
     console.error('Trained user check error:', error);
     res.status(500).json({ error: error.message });
