@@ -1284,23 +1284,39 @@ app.post('/api/trained-users/check', async (req, res) => {
   try {
     const { name, equipmentType } = req.body;
     
+    // 이름 앞뒤 공백 제거 및 정규화
+    const normalizedName = name ? name.trim() : '';
+    
     // 3D프린터 01 또는 02인 경우, 둘 중 하나라도 이수했으면 허용
     if (equipmentType === '3d-printer-01' || equipmentType === '3d-printer-02') {
+      // 이름으로 검색 (공백 제거된 이름으로 검색)
       const trainedUser = await TrainedUser.findOne({
-        name,
+        name: normalizedName,
         equipmentType: { $in: ['3d-printer-01', '3d-printer-02'] }
       });
       
       // 디버깅 로그
-      console.log(`[이수자 체크] 이름: ${name}, 장비: ${equipmentType}, 결과: ${trainedUser ? '이수함' : '이수 안함'}`);
+      console.log(`[이수자 체크] 이름: "${normalizedName}", 장비: ${equipmentType}, 결과: ${trainedUser ? '이수함' : '이수 안함'}`);
       if (trainedUser) {
-        console.log(`[이수자 체크] 찾은 이수자 - 이름: ${trainedUser.name}, 장비: ${trainedUser.equipmentType}`);
+        console.log(`[이수자 체크] 찾은 이수자 - 이름: "${trainedUser.name}", 장비: ${trainedUser.equipmentType}`);
+      } else {
+        // 이수자가 없을 때 유사한 이름이 있는지 확인 (디버깅용)
+        const similarUsers = await TrainedUser.find({
+          equipmentType: { $in: ['3d-printer-01', '3d-printer-02'] },
+          name: { $regex: normalizedName.replace(/\s+/g, '.*'), $options: 'i' }
+        }).limit(3);
+        if (similarUsers.length > 0) {
+          console.log(`[이수자 체크] 유사한 이름 발견:`, similarUsers.map(u => `"${u.name}"`).join(', '));
+        }
       }
       
       res.json({ isTrained: !!trainedUser });
     } else {
       // 다른 장비는 기존 로직대로 정확히 일치하는 것만 확인
-      const trainedUser = await TrainedUser.findOne({ name, equipmentType });
+      const trainedUser = await TrainedUser.findOne({ 
+        name: normalizedName, 
+        equipmentType 
+      });
       res.json({ isTrained: !!trainedUser });
     }
   } catch (error) {
