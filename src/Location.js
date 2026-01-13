@@ -1,8 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import './Location.css';
 
-// 카카오 지도 API 키 (카카오 개발자 사이트에서 발급)
-const KAKAO_APP_KEY = process.env.REACT_APP_KAKAO_MAP_KEY || '';
+// 카카오 지도 API 키 (JavaScript 키)
+const KAKAO_APP_KEY = '072a98b82dd39ad4ac6cc381d32b0fac';
 const center = { lat: 36.308555, lng: 126.899024 };
 
 function Location() {
