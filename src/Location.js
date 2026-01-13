@@ -1,55 +1,68 @@
 import React, { useEffect, useRef } from 'react';
 import './Location.css';
 
-const NAVER_CLIENT_ID = '7ogmif84uh';
+// 카카오 지도 API 키 (카카오 개발자 사이트에서 발급)
+const KAKAO_APP_KEY = process.env.REACT_APP_KAKAO_MAP_KEY || '';
 const center = { lat: 36.308555, lng: 126.899024 };
 
 function Location() {
   const mapRef = useRef(null);
 
   useEffect(() => {
-    // 인증 실패 콜백 함수 정의
-    window.navermap_authFailure = function() {
-      console.error('네이버 지도 API 인증에 실패했습니다. Client ID를 확인해주세요.');
-      console.error('현재 도메인:', window.location.origin);
-      console.error('서버에서 자동으로 www가 추가되고 있습니다.');
-      console.error('네이버 클라우드 플랫폼에 www 도메인도 등록해야 합니다.');
-    };
+    // 이미 카카오 맵 스크립트가 로드되어 있는지 확인
+    if (window.kakao && window.kakao.maps) {
+      initializeMap();
+      return;
+    }
 
     const script = document.createElement('script');
-    script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${NAVER_CLIENT_ID}`;
+    script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_APP_KEY}&autoload=false`;
     script.async = true;
     script.onload = () => {
-      if (window.naver && window.naver.maps) {
-        try {
-          // eslint-disable-next-line no-undef
-          const map = new window.naver.maps.Map(mapRef.current, {
-            center: new window.naver.maps.LatLng(center.lat, center.lng),
-            zoom: 15,
-          });
-          // 마커 추가
-          // eslint-disable-next-line no-undef
-          new window.naver.maps.Marker({
-            position: new window.naver.maps.LatLng(center.lat, center.lng),
-            map,
-          });
-        } catch (error) {
-          console.error('지도 초기화 중 오류 발생:', error);
-        }
-      } else {
-        console.error('네이버 지도 API가 로드되지 않았습니다.');
-      }
+      window.kakao.maps.load(() => {
+        initializeMap();
+      });
     };
     script.onerror = () => {
-      console.error('네이버 지도 API 스크립트 로드에 실패했습니다.');
+      console.error('카카오 지도 API 스크립트 로드에 실패했습니다.');
     };
     document.head.appendChild(script);
+
     return () => {
       if (document.head.contains(script)) {
         document.head.removeChild(script);
       }
     };
   }, []);
+
+  const initializeMap = () => {
+    if (!mapRef.current) return;
+
+    try {
+      const mapOption = {
+        center: new window.kakao.maps.LatLng(center.lat, center.lng),
+        level: 3, // 확대 레벨 (숫자가 작을수록 확대)
+      };
+
+      const map = new window.kakao.maps.Map(mapRef.current, mapOption);
+
+      // 마커 추가
+      const markerPosition = new window.kakao.maps.LatLng(center.lat, center.lng);
+      const marker = new window.kakao.maps.Marker({
+        position: markerPosition,
+      });
+      marker.setMap(map);
+
+      // 인포윈도우 추가
+      const infowindow = new window.kakao.maps.InfoWindow({
+        content: '<div style="padding:5px;font-size:12px;">디지털도화서</div>',
+      });
+      infowindow.open(map, marker);
+
+    } catch (error) {
+      console.error('지도 초기화 중 오류 발생:', error);
+    }
+  };
 
   return (
     <div className="page-container">
