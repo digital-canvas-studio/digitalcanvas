@@ -45,6 +45,18 @@ const connectMongoDB = async () => {
     });
     mongoConnected = true;
     console.log('Successfully connected to MongoDB (with connection pool)');
+
+    // 성능 최적화: 인덱스 생성 (이미 존재하면 무시됨)
+    try {
+      const db = mongoose.connection.db;
+      await db.collection('schedules').createIndex({ start: 1 });
+      await db.collection('schedules').createIndex({ end: 1 });
+      await db.collection('schedules').createIndex({ start: 1, end: 1 });
+      console.log('Database indexes ensured for schedules collection');
+    } catch (indexErr) {
+      console.log('Index creation skipped or already exists:', indexErr.message);
+    }
+
     return true;
   } catch (err) {
     console.error('Could not connect to MongoDB', err);
@@ -1452,6 +1464,32 @@ const scheduleCleanup = () => {
 
 scheduleCleanup();
 
+// Keep-alive: Render 무료 플랜 sleep 방지 (14분마다 자체 ping)
+const KEEP_ALIVE_URL = process.env.RENDER_EXTERNAL_URL || process.env.KEEP_ALIVE_URL;
+let keepAliveInterval = null;
+
+const startKeepAlive = () => {
+  if (process.env.NODE_ENV === 'production' && KEEP_ALIVE_URL) {
+    keepAliveInterval = setInterval(async () => {
+      try {
+        const https = require('https');
+        const http = require('http');
+        const url = new URL(KEEP_ALIVE_URL + '/health');
+        const client = url.protocol === 'https:' ? https : http;
+
+        client.get(url, (res) => {
+          console.log(`[Keep-Alive] Ping sent at ${new Date().toISOString()} - Status: ${res.statusCode}`);
+        }).on('error', (err) => {
+          console.log(`[Keep-Alive] Ping failed: ${err.message}`);
+        });
+      } catch (err) {
+        console.log(`[Keep-Alive] Error: ${err.message}`);
+      }
+    }, 14 * 60 * 1000); // 14분마다 (Render는 15분 후 sleep)
+    console.log('Keep-alive scheduler activated (every 14 minutes)');
+  }
+};
+
 // 서버 시작 - MongoDB 연결 완료 후 시작
 (async () => {
   try {
@@ -1460,6 +1498,7 @@ scheduleCleanup();
       console.log(`Server is running on port ${PORT}`);
       console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log('Personal info cleanup scheduler activated');
+      startKeepAlive();
     });
   } catch (error) {
     console.error('Failed to start server:', error);

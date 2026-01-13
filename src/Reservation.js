@@ -583,16 +583,21 @@ function Reservation() {
     const fetchReservations = async () => {
       try {
         setIsLoading(true);
-        // 모든 예약 데이터 조회 (test 데이터베이스의 schedules 컬렉션 전체)
-        // 날짜 필터 없이 모든 데이터 가져오기
+        // 성능 최적화: 과거 3개월 ~ 미래 3개월 데이터만 조회
+        const threeMonthsAgo = new Date();
+        threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+        const threeMonthsLater = new Date();
+        threeMonthsLater.setMonth(threeMonthsLater.getMonth() + 3);
+
         const response = await api.get('/api/schedules', {
           params: {
-            // start, end 파라미터 제거하여 모든 데이터 조회
+            start: threeMonthsAgo.toISOString(),
+            end: threeMonthsLater.toISOString()
           }
         });
         const formattedEvents = response.data.map(formatEvent);
         setEvents(formattedEvents);
-        
+
         // 최근 예약 10건 저장 (생성일 기준 내림차순)
         const sortedByCreated = [...response.data].sort((a, b) => {
           const dateA = new Date(a.createdAt || a.start);
