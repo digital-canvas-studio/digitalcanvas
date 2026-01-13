@@ -8,10 +8,10 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Redirect www to naked domain
+// Redirect www to naked domain (네이버 지도 API 도메인 인증용)
 app.use((req, res, next) => {
-  if (req.headers.host === 'knuh-ditdo.kr') {
-    return res.redirect(301, 'https://www.knuh-ditdo.kr' + req.originalUrl);
+  if (req.headers.host === 'www.knuh-ditdo.kr') {
+    return res.redirect(301, 'https://knuh-ditdo.kr' + req.originalUrl);
   }
   next();
 });
