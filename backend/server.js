@@ -1139,8 +1139,21 @@ app.put('/api/popups/:id', authenticateToken, async (req, res) => {
 
 // Delete popup by ID (requires authentication)
 app.delete('/api/popups/:id', authenticateToken, async (req, res) => {
+  console.log('[DEBUG] DELETE /api/popups/:id 호출됨, id:', req.params.id);
   try {
-    const popup = await Popup.findByIdAndDelete(req.params.id);
+    const id = req.params.id;
+
+    // 먼저 Mongoose로 시도 (ObjectId인 경우)
+    let popup = await Popup.findByIdAndDelete(id);
+
+    // 못 찾으면 네이티브 MongoDB로 문자열 _id 시도
+    if (!popup) {
+      const db = mongoose.connection.db;
+      const result = await db.collection('popups').findOneAndDelete({ _id: id });
+      popup = result.value || result;
+    }
+
+    console.log('[DEBUG] 팝업 삭제 결과:', popup ? '성공' : '찾을 수 없음');
     if (!popup) {
       return res.status(404).json({ error: 'Popup not found' });
     }

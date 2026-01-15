@@ -32,7 +32,9 @@ function Statistics() {
       const month = selectedMonth.getMonth();
       const startDate = new Date(year, month, 1);
       const endDate = new Date(year, month + 1, 0, 23, 59, 59); // 해당 월의 마지막 날
-      
+
+      console.log('[Statistics] 조회 기간:', startDate.toISOString(), '~', endDate.toISOString());
+
       // 날짜 범위를 지정하여 필요한 데이터만 조회 (비용 절감)
       const response = await api.get('/api/schedules', {
         params: {
@@ -41,6 +43,12 @@ function Statistics() {
         }
       });
       const data = response.data;
+
+      console.log('[Statistics] API 응답 데이터 개수:', data.length);
+      if (data.length > 0) {
+        console.log('[Statistics] 첫 번째 데이터 샘플:', JSON.stringify(data[0], null, 2));
+      }
+
       setSchedules(data);
       calculateStatistics(data);
     } catch (error) {
@@ -113,19 +121,22 @@ function Statistics() {
         const actualSpaces = schedule.spaces.filter(s => {
           // 휴관 제외
           if (s === '휴관' || s === 'closed') return false;
+          // 메이커스페이스 자체 제외 (공간이 아닌 카테고리)
+          if (s === '메이커스페이스') return false;
           // 메이커스페이스 항목 제외
-          if (s.includes('3D프린터') || s.includes('3d프린터') || 
+          if (s.includes('3D프린터') || s.includes('3d프린터') ||
               s.includes('레이저각인기') || s.includes('레이저') ||
               s.includes('printer') || s.includes('laser') || s.includes('engraver')) {
             return false;
           }
           // 장비 항목 제외
-          if (s.includes('카메라') || s.includes('캠코더') || s.includes('조명') || 
-              s.includes('레코더') || s.includes('마이크') || s.includes('칠판') || 
+          if (s.includes('카메라') || s.includes('캠코더') || s.includes('조명') ||
+              s.includes('레코더') || s.includes('마이크') || s.includes('칠판') ||
               s.includes('노트북')) {
             return false;
           }
-          return true;
+          // 유효한 공간 이름만 카운트
+          return validSpaceNames.includes(s);
         });
         stats[weekKey].space += actualSpaces.length;
       }
@@ -142,37 +153,45 @@ function Statistics() {
 
       // 3D프린터 카운트 (3d-printer로 시작하거나 3D프린터가 포함된 모든 항목)
       if (details.makerSpaceTypes && details.makerSpaceTypes.length > 0) {
-        const printer3dCount = details.makerSpaceTypes.filter(type => 
+        const printer3dCount = details.makerSpaceTypes.filter(type =>
           type.includes('3d-printer') || type.includes('printer')
         ).length;
         stats[weekKey].printer3d += printer3dCount;
-      } else if (schedule.equipment) {
-        const printer3dCount = schedule.equipment.filter(e => 
-          e.includes('3D프린터') || e.includes('3d프린터')
-        ).length;
-        stats[weekKey].printer3d += printer3dCount;
-      } else if (schedule.spaces) {
-        const printer3dCount = schedule.spaces.filter(s => 
-          s.includes('3D프린터') || s.includes('3d프린터')
-        ).length;
+      } else {
+        // 기존 데이터: equipment와 spaces 모두 확인
+        let printer3dCount = 0;
+        if (schedule.equipment && schedule.equipment.length > 0) {
+          printer3dCount += schedule.equipment.filter(e =>
+            e.includes('3D프린터') || e.includes('3d프린터')
+          ).length;
+        }
+        if (schedule.spaces && schedule.spaces.length > 0) {
+          printer3dCount += schedule.spaces.filter(s =>
+            s.includes('3D프린터') || s.includes('3d프린터')
+          ).length;
+        }
         stats[weekKey].printer3d += printer3dCount;
       }
 
       // 레이저각인기 카운트 (레이저각인기가 포함된 모든 항목)
       if (details.makerSpaceTypes && details.makerSpaceTypes.length > 0) {
-        const laserCount = details.makerSpaceTypes.filter(type => 
+        const laserCount = details.makerSpaceTypes.filter(type =>
           type.includes('laser') || type.includes('engraver')
         ).length;
         stats[weekKey].laser += laserCount;
-      } else if (schedule.equipment) {
-        const laserCount = schedule.equipment.filter(e => 
-          e.includes('레이저각인기') || e.includes('레이저')
-        ).length;
-        stats[weekKey].laser += laserCount;
-      } else if (schedule.spaces) {
-        const laserCount = schedule.spaces.filter(s => 
-          s.includes('레이저각인기') || s.includes('레이저')
-        ).length;
+      } else {
+        // 기존 데이터: equipment와 spaces 모두 확인
+        let laserCount = 0;
+        if (schedule.equipment && schedule.equipment.length > 0) {
+          laserCount += schedule.equipment.filter(e =>
+            e.includes('레이저각인기') || e.includes('레이저')
+          ).length;
+        }
+        if (schedule.spaces && schedule.spaces.length > 0) {
+          laserCount += schedule.spaces.filter(s =>
+            s.includes('레이저각인기') || s.includes('레이저')
+          ).length;
+        }
         stats[weekKey].laser += laserCount;
       }
     });
@@ -284,19 +303,22 @@ function Statistics() {
         spaces = schedule.spaces.filter(s => {
           // 휴관 제외
           if (s === '휴관' || s === 'closed') return false;
+          // 메이커스페이스 자체 제외 (공간이 아닌 카테고리)
+          if (s === '메이커스페이스') return false;
           // 메이커스페이스 항목 제외
-          if (s.includes('3D프린터') || s.includes('3d프린터') || 
+          if (s.includes('3D프린터') || s.includes('3d프린터') ||
               s.includes('레이저각인기') || s.includes('레이저') ||
               s.includes('printer') || s.includes('laser') || s.includes('engraver')) {
             return false;
           }
           // 장비 항목 제외
-          if (s.includes('카메라') || s.includes('캠코더') || s.includes('조명') || 
-              s.includes('레코더') || s.includes('마이크') || s.includes('칠판') || 
+          if (s.includes('카메라') || s.includes('캠코더') || s.includes('조명') ||
+              s.includes('레코더') || s.includes('마이크') || s.includes('칠판') ||
               s.includes('노트북')) {
             return false;
           }
-          return true;
+          // 유효한 공간 이름만 반환
+          return validSpaceNames.includes(s);
         });
       }
 
