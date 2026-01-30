@@ -3,10 +3,59 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const https = require('https');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// Telegram 메시지 전송 함수
+const sendTelegramMessage = (message) => {
+  const botToken = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_CHAT_ID;
+
+  if (!botToken || !chatId) {
+    console.warn('Telegram configuration missing');
+    return;
+  }
+
+  const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+
+  const postData = JSON.stringify({
+    chat_id: chatId,
+    text: message,
+    parse_mode: 'HTML'
+  });
+
+  const options = {
+    hostname: 'api.telegram.org',
+    path: `/bot${botToken}/sendMessage`,
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Content-Length': Buffer.byteLength(postData)
+    }
+  };
+
+  const req = https.request(options, (res) => {
+    let data = '';
+    res.on('data', (chunk) => {
+      data += chunk;
+    });
+    res.on('end', () => {
+      if (res.statusCode !== 200) {
+        console.error('Telegram API error:', data);
+      }
+    });
+  });
+
+  req.on('error', (e) => {
+    console.error('Error sending Telegram message:', e);
+  });
+
+  req.write(postData);
+  req.end();
+};
 
 // Redirect www to naked domain (네이버 지도 API 도메인 인증용)
 app.use((req, res, next) => {
@@ -968,7 +1017,42 @@ app.post('/api/schedules', async (req, res) => {
     const newSchedule = new Schedule(scheduleData);
 
     const savedSchedule = await newSchedule.save();
-    
+
+    // Telegram 메시지 전송
+    const notesObj = notes ? JSON.parse(notes) : {};
+    const userName = notesObj.name || 'Unknown';
+    const userDept = notesObj.department || '-';
+    const userContact = notesObj.contact || '-';
+    const startTime = new Date(startDate).toLocaleString('ko-KR');
+    const endTime = new Date(endDate).toLocaleString('ko-KR');
+
+    let reservationDetails = '';
+    if (notesObj.spaceTypes && notesObj.spaceTypes.length > 0) {
+      reservationDetails += `🏢 공간: ${notesObj.spaceTypes.join(', ')}\n`;
+    }
+    if (notesObj.equipmentTypes && notesObj.equipmentTypes.length > 0) {
+      reservationDetails += `🔧 장비: ${notesObj.equipmentTypes.join(', ')}\n`;
+    }
+    if (notesObj.makerSpaceTypes && notesObj.makerSpaceTypes.length > 0) {
+      reservationDetails += `🛠️ 메이커스페이스: ${notesObj.makerSpaceTypes.join(', ')}\n`;
+    }
+
+    const telegramMessage = `
+<b>📍 새로운 예약이 들어왔습니다!</b>
+
+<b>예약자 정보</b>
+👤 이름: ${userName}
+🏫 소속: ${userDept}
+📱 연락처: ${userContact}
+
+<b>예약 정보</b>
+📅 시작: ${startTime}
+📅 종료: ${endTime}
+${reservationDetails}
+    `.trim();
+
+    sendTelegramMessage(telegramMessage);
+
     // userId가 있으면 populate, 없으면 그냥 반환
     if (savedSchedule.userId) {
       const populatedSchedule = await Schedule.findById(savedSchedule._id).populate('userId', 'username name');
