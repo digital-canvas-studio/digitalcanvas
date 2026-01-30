@@ -9,6 +9,35 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// 한글 매핑 테이블
+const koreanNames = {
+  // 공간
+  'emeral-room-01': '이메리얼룸01',
+  'emeral-room-02': '이메리얼룸02',
+  'creative-workshop': '창작방앗간',
+  'coexistence': '공존',
+
+  // 장비
+  'nikon-dslr': '니콘 DSLR 카메라',
+  'sony-camcorder': '소니 캠코더',
+  '360-camera': '360 카메라(교내연구소만 가능)',
+  'led-light': 'LED 조명',
+  'zoom-recorder': '줌 사운드 레코더',
+  'microphone': '현장답사용 마이크리시버',
+  'electronic-board': '전자칠판',
+  'laptop': '노트북',
+
+  // 메이커스페이스
+  '3d-printer-01': '3D프린터01',
+  '3d-printer-02': '3D프린터02',
+  'laser-engraver': '레이저각인기'
+};
+
+// value를 한글로 변환
+const getKoreanName = (value) => {
+  return koreanNames[value] || value;
+};
+
 // Telegram 메시지 전송 함수
 const sendTelegramMessage = (message) => {
   const botToken = process.env.TELEGRAM_BOT_TOKEN;
@@ -1028,13 +1057,16 @@ app.post('/api/schedules', async (req, res) => {
 
     let reservationDetails = '';
     if (notesObj.spaceTypes && notesObj.spaceTypes.length > 0) {
-      reservationDetails += `🏢 공간: ${notesObj.spaceTypes.join(', ')}\n`;
+      const koreanSpaces = notesObj.spaceTypes.map(type => getKoreanName(type)).join(', ');
+      reservationDetails += `🏢 공간: ${koreanSpaces}\n`;
     }
     if (notesObj.equipmentTypes && notesObj.equipmentTypes.length > 0) {
-      reservationDetails += `🔧 장비: ${notesObj.equipmentTypes.join(', ')}\n`;
+      const koreanEquipment = notesObj.equipmentTypes.map(type => getKoreanName(type)).join(', ');
+      reservationDetails += `🔧 장비: ${koreanEquipment}\n`;
     }
     if (notesObj.makerSpaceTypes && notesObj.makerSpaceTypes.length > 0) {
-      reservationDetails += `🛠️ 메이커스페이스: ${notesObj.makerSpaceTypes.join(', ')}\n`;
+      const koreanMaker = notesObj.makerSpaceTypes.map(type => getKoreanName(type)).join(', ');
+      reservationDetails += `🛠️ 메이커스페이스: ${koreanMaker}\n`;
     }
 
     const telegramMessage = `
