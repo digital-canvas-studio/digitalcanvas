@@ -1050,8 +1050,8 @@ app.post('/api/schedules', async (req, res) => {
     const userName = notesObj.name || 'Unknown';
     const userDept = notesObj.department || '-';
     const userContact = notesObj.contact || '-';
-    const startTime = new Date(startDate).toLocaleString('ko-KR');
-    const endTime = new Date(endDate).toLocaleString('ko-KR');
+    const startTime = new Date(startDate).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
+    const endTime = new Date(endDate).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
 
     let reservationDetails = '';
     if (notesObj.spaceTypes && notesObj.spaceTypes.length > 0) {
