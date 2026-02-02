@@ -587,9 +587,7 @@ app.put('/api/programs/:id', async (req, res) => {
 // Get single program by ID
 app.get('/api/programs/:id', async (req, res) => {
   try {
-    // _id가 String으로 저장되어 있으므로 직접 MongoDB 드라이버 사용
-    const db = mongoose.connection.db;
-    const program = await db.collection('program').findOne({ _id: req.params.id });
+    const program = await Program.findById(req.params.id);
     
     if (!program) {
       console.error(`[DEBUG] Program not found with ID: ${req.params.id}`);
