@@ -4,7 +4,7 @@ import './Location.css';
 // 카카오 지도 API 키 (JavaScript 키)
 const KAKAO_APP_KEY = '072a98b82dd39ad4ac6cc381d32b0fac';
 // 한국전통문화대학교 온지관 좌표
-const center = { lat: 36.3077, lng: 126.8960 };
+const center = { lat: 36.3082, lng: 126.8994 };
 
 function Location() {
   const mapRef = useRef(null);
