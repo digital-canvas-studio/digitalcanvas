@@ -9,6 +9,10 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Telegram 환경변수 확인 로그
+console.log('[Telegram] BOT_TOKEN exists:', !!process.env.TELEGRAM_BOT_TOKEN);
+console.log('[Telegram] CHAT_ID exists:', !!process.env.TELEGRAM_CHAT_ID);
+
 // 한글 매핑 테이블
 const koreanNames = {
   // 공간
@@ -44,9 +48,10 @@ const sendTelegramMessage = (message) => {
   const chatId = process.env.TELEGRAM_CHAT_ID;
 
   if (!botToken || !chatId) {
-    console.warn('Telegram configuration missing');
+    console.warn('[Telegram] Configuration missing! botToken:', !!botToken, 'chatId:', !!chatId);
     return;
   }
+  console.log('[Telegram] Sending message...');
 
   const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
 
@@ -72,8 +77,10 @@ const sendTelegramMessage = (message) => {
       data += chunk;
     });
     res.on('end', () => {
-      if (res.statusCode !== 200) {
-        console.error('Telegram API error:', data);
+      if (res.statusCode === 200) {
+        console.log('[Telegram] Message sent successfully');
+      } else {
+        console.error('[Telegram] API error (status ' + res.statusCode + '):', data);
       }
     });
   });
@@ -1081,6 +1088,7 @@ app.post('/api/schedules', async (req, res) => {
 ${reservationDetails}
     `.trim();
 
+    console.log('[Telegram] Reservation created, triggering notification for:', userName);
     sendTelegramMessage(telegramMessage);
 
     // userId가 있으면 populate, 없으면 그냥 반환
