@@ -383,51 +383,25 @@ function SpaceReservationForm({ onClose, onReservationAdded }) {
             // 기존 형식 확인 (equipment 필드 사용)
             if (maintenanceReservation.equipment) {
               maintenanceReservation.equipment.forEach(equipName => {
-                if (equipName.includes('3D프린터') || equipName.includes('3d프린터')) {
-                  maintenanceItems.push('3d-printer');
-                }
-                if (equipName.includes('레이저각인기') || equipName.includes('레이저')) {
-                  maintenanceItems.push('laser-engraver');
-                }
+                const matchingMaker = makerSpaceOptions.find(opt => opt.label === equipName);
+                if (matchingMaker) maintenanceItems.push(matchingMaker.value);
               });
             }
           }
 
-          // 신청하려는 장비가 수리중인지 확인
+          // 신청하려는 장비가 수리중인지 확인 (각 장비별 정확한 값으로 비교)
           const hasMaintenanceConflict = formData.makerSpaceTypes.some(requestedType => {
-            // 3D프린터 계열 체크
-            if (requestedType.includes('3d-printer') || requestedType.includes('printer')) {
-              return maintenanceItems.some(maintenanceItem => 
-                maintenanceItem.includes('3d-printer') || maintenanceItem.includes('printer')
-              );
-            }
-            // 레이저각인기 계열 체크
-            if (requestedType.includes('laser') || requestedType.includes('engraver')) {
-              return maintenanceItems.some(maintenanceItem => 
-                maintenanceItem.includes('laser') || maintenanceItem.includes('engraver')
-              );
-            }
-            return false;
+            return maintenanceItems.includes(requestedType);
           });
 
           if (hasMaintenanceConflict) {
             // 수리중인 장비 이름 찾기
             const maintenanceEquipmentNames = [];
             formData.makerSpaceTypes.forEach(type => {
-              if (type.includes('3d-printer') || type.includes('printer')) {
-                const printerOption = makerSpaceOptions.find(opt => 
-                  opt.value.includes('3d-printer') || opt.value.includes('printer')
-                );
-                if (printerOption && !maintenanceEquipmentNames.includes(printerOption.label)) {
-                  maintenanceEquipmentNames.push(printerOption.label);
-                }
-              }
-              if (type.includes('laser') || type.includes('engraver')) {
-                const laserOption = makerSpaceOptions.find(opt => 
-                  opt.value.includes('laser') || opt.value.includes('engraver')
-                );
-                if (laserOption && !maintenanceEquipmentNames.includes(laserOption.label)) {
-                  maintenanceEquipmentNames.push(laserOption.label);
+              if (maintenanceItems.includes(type)) {
+                const option = makerSpaceOptions.find(opt => opt.value === type);
+                if (option && !maintenanceEquipmentNames.includes(option.label)) {
+                  maintenanceEquipmentNames.push(option.label);
                 }
               }
             });
@@ -486,34 +460,12 @@ function SpaceReservationForm({ onClose, onReservationAdded }) {
               if (matchingEquip) reservedItems.push(matchingEquip.value);
               const matchingMaker = makerSpaceOptions.find(opt => opt.label === equipName);
               if (matchingMaker) reservedItems.push(matchingMaker.value);
-              
-              // 3D프린터 통합 처리
-              if (equipName.includes('3D프린터') || equipName.includes('3d프린터')) {
-                reservedItems.push('3d-printer-01'); // 모든 3D프린터 항목을 대표값으로 추가
-              }
-              // 레이저각인기 통합 처리
-              if (equipName.includes('레이저각인기') || equipName.includes('레이저')) {
-                reservedItems.push('laser-engraver'); // 모든 레이저각인기 항목을 대표값으로 추가
-              }
             });
           }
         }
 
-        // 예약 내용이 겹치는지 확인 (3D프린터 및 레이저각인기는 통합 체크)
+        // 예약 내용이 겹치는지 확인 (각 항목별 정확한 값으로 비교)
         const itemOverlap = requestedItems.some(item => {
-          // 3D프린터 계열 체크
-          if (item.includes('3d-printer') || item.includes('printer')) {
-            return reservedItems.some(reserved => 
-              reserved.includes('3d-printer') || reserved.includes('printer')
-            );
-          }
-          // 레이저각인기 계열 체크
-          if (item.includes('laser') || item.includes('engraver')) {
-            return reservedItems.some(reserved => 
-              reserved.includes('laser') || reserved.includes('engraver')
-            );
-          }
-          // 일반 항목 체크
           return reservedItems.includes(item);
         });
 
