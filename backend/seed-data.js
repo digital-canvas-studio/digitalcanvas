@@ -208,7 +208,7 @@ async function seedData() {
       btn2: "프로그램 보기",
       btn1Link: "/space",
       btn2Link: "/program",
-      mainImage: "http://nodetree.cafe24.com/%B5%F0%C1%F6%C5%D0%B5%B5%C8%AD%BC%AD/main.png",
+      mainImage: "https://ik.imagekit.io/gc3jtyt9o/디지털도화서/main.png",
       content: "<h2>디지털도화서란?</h2><p>누구나 자유롭게 창작하고, 디지털로 소통하는 열린 공간입니다.</p><p>아이디어부터 완성까지, 모든 과정을 함께 경험해보세요.</p>"
     };
 

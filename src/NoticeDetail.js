@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import './PostDetail.css'; // 기존 CSS 재활용
 import api from './api';
+import { ikRewriteHtml } from './utils/ikUrl';
 
 function NoticeDetail() {
   const [notice, setNotice] = useState(null);
@@ -51,7 +52,7 @@ function NoticeDetail() {
       <p className="post-date">{formattedDate}</p>
       <div 
         className="post-content"
-        dangerouslySetInnerHTML={{ __html: notice.content }}
+        dangerouslySetInnerHTML={{ __html: ikRewriteHtml(notice.content, { w: 1600 }) }}
       />
       <div className="post-actions">
         <Link to="/notice" className="btn">목록으로</Link>

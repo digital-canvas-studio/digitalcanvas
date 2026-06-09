@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import './PostDetail.css';
 import AuthContext from './context/AuthContext';
 import api from './api';
+import { ikRewriteHtml } from './utils/ikUrl';
 
 function SpaceDetail() {
   const { id } = useParams();
@@ -55,7 +56,7 @@ function SpaceDetail() {
           </div>
         )}
       </div>
-      <div className="post-content" dangerouslySetInnerHTML={{ __html: space.content }} />
+      <div className="post-content" dangerouslySetInnerHTML={{ __html: ikRewriteHtml(space.content, { w: 1600 }) }} />
     </div>
   );
 }

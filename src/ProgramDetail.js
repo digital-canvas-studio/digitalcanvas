@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import './PostDetail.css';
 import api from './api';
+import { ikRewriteHtml } from './utils/ikUrl';
 
 function ProgramDetail() {
   const [program, setProgram] = useState(null);
@@ -42,7 +43,7 @@ function ProgramDetail() {
       <h1 className="post-title">{program.title}</h1>
       <div 
         className="post-content"
-        dangerouslySetInnerHTML={{ __html: program.content }}
+        dangerouslySetInnerHTML={{ __html: ikRewriteHtml(program.content, { w: 1600 }) }}
       />
       <div className="post-actions">
         <Link to="/program" className="btn">목록으로</Link>

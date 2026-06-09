@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import './Space.css'; // 공간소개 페이지와 동일한 갤러리 스타일 사용
 import AuthContext from './context/AuthContext';
 import api from './api';
+import { ikUrl } from './utils/ikUrl';
 
 function Program() {
   const [programs, setPrograms] = useState([]);
@@ -40,7 +41,7 @@ function Program() {
         <div className="space-list-container">
         {programs.map(program => (
             <Link to={`/program/${program._id}`} key={program._id} className="space-item">
-              <img src={program.thumbnailUrl} alt={program.title} className="space-item-image" />
+              <img src={ikUrl(program.thumbnailUrl, { w: 800 })} alt={program.title} className="space-item-image" />
               <div className="space-item-title">{program.title}</div>
             </Link>
         ))}

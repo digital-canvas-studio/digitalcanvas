@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthContext from './context/AuthContext';
 import api from './api';
+import { ikUrl } from './utils/ikUrl';
 import './PopupManage.css';
 
 function PopupManage() {
@@ -88,7 +89,7 @@ function PopupManage() {
                   <td className="message-cell">{popup.message}</td>
                   <td>
                     {popup.imageUrl && (
-                      <img src={popup.imageUrl} alt="팝업 이미지" className="popup-thumbnail" />
+                      <img src={ikUrl(popup.imageUrl, { w: 400 })} alt="팝업 이미지" className="popup-thumbnail" />
                     )}
                   </td>
                   <td>

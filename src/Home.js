@@ -9,6 +9,7 @@ import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import Placeholder from '@tiptap/extension-placeholder';
 import TextAlign from '@tiptap/extension-text-align';
+import { ikUrl, ikRewriteHtml } from './utils/ikUrl';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -66,7 +67,7 @@ function Home() {
   const [editContent, setEditContent] = useState('');
 
   // 이미지 상태 추가
-  const [mainImage, setMainImage] = useState('http://nodetree.cafe24.com/%B5%F0%C1%F6%C5%D0%B5%B5%C8%AD%BC%AD/main.png');
+  const [mainImage, setMainImage] = useState('https://ik.imagekit.io/gc3jtyt9o/디지털도화서/main.png');
   const [editMainImage, setEditMainImage] = useState('');
 
   // Tiptap 에디터 인스턴스
@@ -205,7 +206,7 @@ function Home() {
       setBtn1Link(about.btn1Link || '');
       setBtn2Link(about.btn2Link || '');
       setSnsLink(about.snsLink || 'https://www.instagram.com/digitalcanvas_knuh/');
-      setMainImage(about.mainImage || 'http://nodetree.cafe24.com/%B5%F0%C1%F6%C5%D0%B5%B5%C8%AD%BC%AD/main.png');
+      setMainImage(about.mainImage || 'https://ik.imagekit.io/gc3jtyt9o/디지털도화서/main.png');
     }
   }, [about]);
 
@@ -299,7 +300,7 @@ function Home() {
                 {popup.imageUrls && popup.imageUrls.length > 0 ? (
                   <>
                     <img 
-                      src={popup.imageUrls[currentImageIndex]} 
+                      src={ikUrl(popup.imageUrls[currentImageIndex], { w: 1600 })} 
                       alt={`${popup.title} ${currentImageIndex + 1}`} 
                       className="popup-image"
                       onError={(e) => {
@@ -343,7 +344,7 @@ function Home() {
                     )}
                   </>
                 ) : popup.imageUrl && (
-                  <img src={popup.imageUrl} alt={popup.title} className="popup-image" />
+                  <img src={ikUrl(popup.imageUrl, { w: 1600 })} alt={popup.title} className="popup-image" />
                 )}
               </div>
             )}
@@ -406,7 +407,7 @@ function Home() {
                 <div className="apple-hero-maintext">{mainText}</div>
                 <div className="apple-hero-subtext">{subText}</div>
                 <img
-                  src={mainImage}
+                  src={ikUrl(mainImage, { w: 1600 })}
                   alt="디지털캔버스 대표 이미지"
                   className="apple-hero-mainimg"
                   onError={e => { e.target.onerror=null; e.target.src='https://via.placeholder.com/320x120?text=Digital+Canvas'; }}
@@ -446,7 +447,7 @@ function Home() {
                 {!editMode && about.content && (
                   <div
                     className="apple-hero-about-html"
-                    dangerouslySetInnerHTML={{ __html: about.content }}
+                    dangerouslySetInnerHTML={{ __html: ikRewriteHtml(about.content, { w: 1600 }) }}
                   />
                 )}
                 {editMode && editor && (

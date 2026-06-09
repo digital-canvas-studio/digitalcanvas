@@ -2,6 +2,7 @@ import React, { useState, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import './Navbar.css';
 import AuthContext from './context/AuthContext';
+import { ikUrl } from './utils/ikUrl';
 
 function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -24,11 +25,11 @@ function Navbar() {
     <nav className="navbar">
       <div className="navbar-title">
         <Link to="/" onClick={closeMenu}>
-          <img src="//nodetree.cafe24.com/%B5%F0%C1%F6%C5%D0%B5%B5%C8%AD%BC%AD/logo/logo4.png" alt="logo" className="navbar-logo" />
+          <img src={ikUrl("https://ik.imagekit.io/gc3jtyt9o/디지털도화서/logo/logo4.png", { w: 400 })} alt="logo" className="navbar-logo" />
           디지털도화서
         </Link>
       </div>
-      
+
       <button className="navbar-toggle" onClick={handleMenuToggle}>
         <span className="bar"></span>
         <span className="bar"></span>
@@ -65,4 +66,4 @@ function Navbar() {
   );
 }
 
-export default Navbar; 
+export default Navbar;

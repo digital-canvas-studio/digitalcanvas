@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import './Space.css';
 import api from './api';
+import { ikUrl } from './utils/ikUrl';
 
 function Space() {
   const [spaces, setSpaces] = useState([]);
@@ -35,7 +36,7 @@ function Space() {
       <div className="space-list-container">
         {spaces.map(space => (
           <Link to={`/space/${space._id}`} key={space._id} className="space-item">
-            <img src={space.thumbnailUrl} alt={space.title} className="space-item-image" />
+            <img src={ikUrl(space.thumbnailUrl, { w: 800 })} alt={space.title} className="space-item-image" />
             <div className="space-item-title">{space.title}</div>
           </Link>
         ))}
