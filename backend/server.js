@@ -594,8 +594,14 @@ app.put('/api/programs/:id', async (req, res) => {
 // Get single program by ID
 app.get('/api/programs/:id', async (req, res) => {
   try {
-    const program = await Program.findById(req.params.id);
-    
+    let program = null;
+    if (mongoose.isValidObjectId(req.params.id)) {
+      program = await Program.findById(req.params.id);
+    }
+    if (!program) {
+      // 과거 복원 데이터 호환: _id 가 문자열로 저장된 문서 (mongoose 캐스팅 우회)
+      program = await mongoose.connection.db.collection('program').findOne({ _id: req.params.id });
+    }
     if (!program) {
       console.error(`[DEBUG] Program not found with ID: ${req.params.id}`);
       return res.status(404).json({ error: 'Program not found' });
@@ -1132,7 +1138,14 @@ app.delete('/api/schedules/:id', authenticateToken, async (req, res) => {
 // Get schedule by ID
 app.get('/api/schedules/:id', async (req, res) => {
   try {
-    const schedule = await Schedule.findById(req.params.id).populate('userId', 'username name');
+    let schedule = null;
+    if (mongoose.isValidObjectId(req.params.id)) {
+      schedule = await Schedule.findById(req.params.id).populate('userId', 'username name');
+    }
+    if (!schedule) {
+      // 과거 복원 데이터 호환: _id 가 문자열로 저장된 문서 (mongoose 캐스팅 우회)
+      schedule = await mongoose.connection.db.collection('schedules').findOne({ _id: req.params.id });
+    }
     if (!schedule) {
       return res.status(404).json({ error: 'Schedule not found' });
     }
