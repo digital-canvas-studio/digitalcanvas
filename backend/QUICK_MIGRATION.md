@@ -3,7 +3,7 @@
 ## 제공된 새 MongoDB URI
 
 ```
-mongodb+srv://knuh:Mc152615@cluster0.czi1fpr.mongodb.net/
+mongodb+srv://<USERNAME>:<PASSWORD>@<HOST>/<DB>?retryWrites=true&w=majority
 ```
 
 ## 단계별 진행
@@ -21,14 +21,14 @@ npm run backup-db
 
 ```env
 # 새 무료 클러스터 (복원용)
-NEW_MONGODB_URI=mongodb+srv://knuh:Mc152615@cluster0.czi1fpr.mongodb.net/test?retryWrites=true&w=majority
+NEW_MONGODB_URI=mongodb+srv://<USERNAME>:<PASSWORD>@<HOST>/<DB>?retryWrites=true&w=majority
 ```
 
 또는 직접 명령줄에서:
 
 ```bash
 cd backend
-echo 'NEW_MONGODB_URI=mongodb+srv://knuh:Mc152615@cluster0.czi1fpr.mongodb.net/test?retryWrites=true&w=majority' >> .env
+echo 'NEW_MONGODB_URI=mongodb+srv://<USERNAME>:<PASSWORD>@<HOST>/<DB>?retryWrites=true&w=majority' >> .env
 ```
 
 ### 3단계: 백업 파일 확인
@@ -54,7 +54,7 @@ npm run restore-db backups/backup_test_YYYY-MM-DD_HH-MM-SS/test
 복원이 완료되면 `.env` 파일의 `MONGODB_URI`를 새 URI로 업데이트:
 
 ```env
-MONGODB_URI=mongodb+srv://knuh:Mc152615@cluster0.czi1fpr.mongodb.net/test?retryWrites=true&w=majority
+MONGODB_URI=mongodb+srv://<USERNAME>:<PASSWORD>@<HOST>/<DB>?retryWrites=true&w=majority
 ```
 
 ### 6단계: 서버 테스트
@@ -69,7 +69,7 @@ node server.js
 ## 완전한 새 MongoDB URI
 
 ```
-mongodb+srv://knuh:Mc152615@cluster0.czi1fpr.mongodb.net/test?retryWrites=true&w=majority
+mongodb+srv://<USERNAME>:<PASSWORD>@<HOST>/<DB>?retryWrites=true&w=majority
 ```
 
 ## 주의사항
@@ -77,4 +77,6 @@ mongodb+srv://knuh:Mc152615@cluster0.czi1fpr.mongodb.net/test?retryWrites=true&w
 - 비밀번호가 `Mc152615`로 변경되었습니다 (대문자 M)
 - 데이터베이스 이름은 `test`로 동일합니다
 - 복원 전에 백업이 완료되었는지 확인하세요
+
+
 

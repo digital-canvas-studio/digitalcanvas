@@ -3,7 +3,7 @@
 ## 새 MongoDB URI
 
 ```
-mongodb+srv://nuchnuchstudio_db_user:Mc152615@cluster0.jn9iv8r.mongodb.net/test?retryWrites=true&w=majority
+mongodb+srv://<USERNAME>:<PASSWORD>@<HOST>/<DB>?retryWrites=true&w=majority
 ```
 
 ## Render.com에서 환경 변수 업데이트 방법
@@ -25,7 +25,7 @@ MONGODB_URI
 
 **변수 값:**
 ```
-mongodb+srv://nuchnuchstudio_db_user:Mc152615@cluster0.jn9iv8r.mongodb.net/test?retryWrites=true&w=majority
+mongodb+srv://<USERNAME>:<PASSWORD>@<HOST>/<DB>?retryWrites=true&w=majority
 ```
 
 ### 3단계: 서비스 재배포
@@ -59,4 +59,6 @@ mongodb+srv://nuchnuchstudio_db_user:Mc152615@cluster0.jn9iv8r.mongodb.net/test?
 ### 로그 확인 명령어 (Render.com 대시보드):
 - 서비스 페이지 → **"Logs"** 탭에서 실시간 로그 확인
 - MongoDB 연결 오류 메시지 확인
+
+
 

@@ -2,7 +2,12 @@ const mongoose = require('mongoose');
 require('dotenv').config();
 
 // MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI || "mongodb+srv://knuh:knuh7189@cluster0.czi1fpr.mongodb.net/", {
+// 연결 문자열은 환경변수(MONGODB_URI)로만 주입한다. 하드코딩 금지.
+if (!process.env.MONGODB_URI) {
+  console.error('MONGODB_URI 환경변수가 설정되지 않았습니다. .env에 MONGODB_URI를 지정하세요.');
+  process.exit(1);
+}
+mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })

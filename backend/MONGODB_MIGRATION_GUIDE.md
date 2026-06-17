@@ -75,7 +75,7 @@ tar -czf backup_test_2024-01-15_12-30-00.tar.gz backup_test_2024-01-15_12-30-00
 1. **.env 파일에 새 연결 정보 추가**
    ```env
    # 기존 (백업용으로 유지)
-   MONGODB_URI=mongodb+srv://knuh:mc152615@cluster0.czi1fpr.mongodb.net/test?retryWrites=true&w=majority
+   MONGODB_URI=mongodb+srv://<USERNAME>:<PASSWORD>@<HOST>/<DB>?retryWrites=true&w=majority
    
    # 새 무료 클러스터
    NEW_MONGODB_URI=mongodb+srv://<새username>:<새password>@<새cluster>.mongodb.net/test?retryWrites=true&w=majority
@@ -156,4 +156,6 @@ brew install mongodb-database-tools
 ## 백업 파일 관리
 
 백업 파일은 `backend/backups/` 디렉토리에 저장됩니다. 정기적으로 백업을 수행하고 오래된 백업은 삭제하여 공간을 확보하세요.
+
+
 
