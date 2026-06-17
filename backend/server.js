@@ -42,6 +42,28 @@ const getKoreanName = (value) => {
   return koreanNames[value] || value;
 };
 
+// 금요일·주말에 "관리자만" 예약 가능한 장비 (3D프린터·레이저각인기)
+// 프론트(SpaceReservationForm.js)와 동일 기준: makerSpaceTypes value 패턴 매칭.
+// enum(['3d-printer-01','3d-printer-02','laser-engraver'])과 일치.
+// 주의: 프론트(isAdminOnlyMakerType)와 항상 동일하게 유지할 것.
+const isAdminOnlyMakerType = (value) =>
+  typeof value === 'string' && (
+    value.includes('3d-printer') ||
+    value.includes('laser') ||
+    value.includes('engraver')
+  );
+
+// KST(Asia/Seoul) 기준 요일 반환 (0:일 ~ 6:토). 서버(Render)는 UTC라 단순 getDay()는 어긋남.
+const getKstDayOfWeek = (date) => {
+  // en-US 'short' weekday를 Asia/Seoul 타임존으로 변환 후 매핑
+  const weekday = new Date(date).toLocaleString('en-US', {
+    timeZone: 'Asia/Seoul',
+    weekday: 'short'
+  });
+  const map = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+  return map[weekday];
+};
+
 // Telegram 메시지 전송 함수
 const sendTelegramMessage = (message) => {
   const botToken = process.env.TELEGRAM_BOT_TOKEN;
@@ -1038,6 +1060,50 @@ app.post('/api/schedules', async (req, res) => {
     if (startDate >= endDate) {
       return res.status(400).json({ error: 'End time must be after start time' });
     }
+
+    // ── 금/주말 3D프린터·레이저각인기 관리자 전용 게이트 (서버 측 진짜 게이트) ──
+    // 이 엔드포인트는 공개(미들웨어 없음)이므로 토큰이 있으면 선택적으로 검증해 관리자 여부 판별.
+    // 관리자 등록(Reservation.js)도 동일 /api/schedules로 들어오며 관리자 Bearer 토큰을 보냄.
+    let requesterRole = null;
+    const gateAuthHeader = req.headers['authorization'];
+    const gateToken = gateAuthHeader && gateAuthHeader.split(' ')[1];
+    if (gateToken) {
+      try {
+        const decoded = jwt.verify(gateToken, JWT_SECRET);
+        requesterRole = decoded && decoded.role;
+        if (decoded && decoded.userId) {
+          req.user = decoded; // 아래 userId 저장 로직과 일관
+        }
+      } catch (e) {
+        // 토큰이 유효하지 않으면 비로그인(일반 사용자)로 간주 — 예약 자체는 막지 않음
+      }
+    }
+    const isAdminRequest = requesterRole === 'admin';
+
+    // notes에서 makerSpaceTypes 추출 (프론트 양식과 동일 위치)
+    let gateMakerTypes = [];
+    try {
+      const gateNotes = notes ? JSON.parse(notes) : {};
+      if (Array.isArray(gateNotes.makerSpaceTypes)) {
+        gateMakerTypes = gateNotes.makerSpaceTypes;
+      }
+    } catch (e) {
+      gateMakerTypes = [];
+    }
+    // 장비 판정은 notes.makerSpaceTypes(value 배열) 단일 소스로 한다.
+    // (spaces/equipment 배열은 프론트가 한글 라벨로 보내므로 value 매칭이 불가 → 병합 제거)
+    const hasAdminOnlyMaker = gateMakerTypes.some(isAdminOnlyMakerType);
+
+    // 예약 날짜의 요일을 KST 기준으로 판정 (금:5, 토:6, 일:0)
+    const kstDay = getKstDayOfWeek(startDate);
+    const isFridayOrWeekend = kstDay === 5 || kstDay === 6 || kstDay === 0;
+
+    if (isFridayOrWeekend && hasAdminOnlyMaker && !isAdminRequest) {
+      return res.status(403).json({
+        error: '3D프린터·레이저각인기는 금요일·주말에는 점검일로 관리자 외에는 예약할 수 없습니다.'
+      });
+    }
+    // ────────────────────────────────────────────────────────────────────
 
     const scheduleData = {
       title,

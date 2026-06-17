@@ -55,6 +55,14 @@ function SpaceReservationForm({ onClose, onReservationAdded }) {
     ...(isAfterJanuary2025 ? [{ value: '3d-printer-02', label: '3D프린터02' }] : [])
   ];
 
+  // 금요일·주말에 "관리자만" 예약 가능한 장비 (그 외 장비/공간은 일반 사용자도 가능)
+  // 식별은 makerSpaceTypes 값 패턴(3d-printer*, laser, engraver)을 따른다.
+  // 주의: 백엔드(server.js isAdminOnlyMakerType)와 항상 동일하게 유지할 것.
+  const isAdminOnlyMakerType = (type) =>
+    type.includes('3d-printer') ||
+    type.includes('laser') ||
+    type.includes('engraver');
+
   // 옵션 로드
   useEffect(() => {
     const fetchOptions = async () => {
@@ -242,23 +250,19 @@ function SpaceReservationForm({ onClose, onReservationAdded }) {
       }
     }
 
-    // 주말(토요일, 일요일) 확인
+    // 요일 판정 (0: 일요일, 5: 금요일, 6: 토요일)
     const requestDate = new Date(formData.reservationDate);
-    const dayOfWeek = requestDate.getDay(); // 0: 일요일, 6: 토요일
-    
-    if (dayOfWeek === 0 || dayOfWeek === 6) {
-      alert('디지털도화서는 주말과 공휴일에는 운영하지 않습니다.');
-      return;
-    }
+    const dayOfWeek = requestDate.getDay();
+    const isFridayOrWeekend = dayOfWeek === 5 || dayOfWeek === 6 || dayOfWeek === 0;
 
-    // 2025년 1월 1일부터 금요일 점검일 제한 (관리자 제외)
-    const currentDate = new Date();
-    const january2025 = new Date(2025, 0, 1); // 2025년 1월 1일
-    const isAfterJanuary2025 = currentDate >= january2025;
-    
-    if (isAfterJanuary2025 && dayOfWeek === 5 && (!user || user.role !== 'admin')) {
-      // 금요일(5)이고 관리자가 아닌 경우
-      alert('금요일은 점검일로 관리자 외에는 예약할 수 없습니다.');
+    // 금요일·주말 예약 제한을 "3D프린터·레이저각인기"에만 적용한다.
+    // 해당 장비는 점검/관리 사유로 금·주말에 관리자만 예약 가능.
+    // 그 외 장비/공간은 금·주말에도 일반 사용자가 예약할 수 있다.
+    const isAdmin = !!user && user.role === 'admin';
+    const hasAdminOnlyMaker = formData.makerSpaceTypes.some(isAdminOnlyMakerType);
+
+    if (isFridayOrWeekend && hasAdminOnlyMaker && !isAdmin) {
+      alert('3D프린터·레이저각인기는 금요일·주말에는 점검일로 관리자 외에는 예약할 수 없습니다.');
       return;
     }
 
