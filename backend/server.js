@@ -42,6 +42,41 @@ const getKoreanName = (value) => {
   return koreanNames[value] || value;
 };
 
+// 한글 라벨 → value 역매핑 (레거시 spaces/equipment 필드는 한글 라벨로 저장되므로 value로 정규화)
+const labelToValue = Object.entries(koreanNames).reduce((acc, [value, label]) => {
+  acc[label] = value;
+  return acc;
+}, {});
+
+// 한 예약 문서에서 "자원 value 목록"을 추출한다.
+// 프론트(SpaceReservationForm.js itemOverlap, 424~483행)와 동일 기준:
+//  1순위 notes JSON 의 spaceTypes/equipmentTypes/makerSpaceTypes(value 기반)
+//  2순위(레거시) spaces/equipment 배열(한글 라벨) → value 로 역매핑
+const extractResourceValues = (scheduleLike) => {
+  const items = [];
+  let parsed = null;
+  try {
+    parsed = scheduleLike.notes ? JSON.parse(scheduleLike.notes) : null;
+  } catch (e) {
+    parsed = null;
+  }
+  if (parsed && typeof parsed === 'object') {
+    if (Array.isArray(parsed.spaceTypes)) items.push(...parsed.spaceTypes);
+    if (Array.isArray(parsed.equipmentTypes)) items.push(...parsed.equipmentTypes);
+    if (Array.isArray(parsed.makerSpaceTypes)) items.push(...parsed.makerSpaceTypes);
+  }
+  // notes 에서 자원을 못 얻었으면(레거시 문서) spaces/equipment(한글 라벨)에서 역매핑
+  if (items.length === 0) {
+    if (Array.isArray(scheduleLike.spaces)) {
+      scheduleLike.spaces.forEach((label) => items.push(labelToValue[label] || label));
+    }
+    if (Array.isArray(scheduleLike.equipment)) {
+      scheduleLike.equipment.forEach((label) => items.push(labelToValue[label] || label));
+    }
+  }
+  return items;
+};
+
 // 금요일·주말에 "관리자만" 예약 가능한 장비 (3D프린터·레이저각인기)
 // 프론트(SpaceReservationForm.js)와 동일 기준: makerSpaceTypes value 패턴 매칭.
 // enum(['3d-printer-01','3d-printer-02','laser-engraver'])과 일치.
@@ -1119,6 +1154,48 @@ app.post('/api/schedules', async (req, res) => {
     if (req.user && req.user.userId) {
       scheduleData.userId = req.user.userId;
     }
+
+    // ── 서버 권위 중복(시간 겹침 + 동일 자원) 검사 — 재발 방지 ──
+    // 프론트(SpaceReservationForm.js)의 클라이언트 검사를 우회/경합한 요청까지 막는다.
+    // 사용자 신청·관리자 등록(Reservation.js) 모두 이 POST 핸들러를 통과하므로 여기서 일괄 적용된다.
+    // (검사+저장을 최대한 근접 배치해 race window 축소. 단, 완전한 원자성은 보장 불가 →
+    //  향후 권고: schedules 에 (자원,시간슬롯) 부분 유니크 인덱스 또는 트랜잭션/세션 도입.
+    //  ※ 유니크 인덱스/마이그레이션은 별도 승인 전이므로 여기서 생성하지 않음 — 주석 권고만.)
+    const requestedResources = extractResourceValues({
+      notes,
+      spaces: scheduleData.spaces,
+      equipment: scheduleData.equipment
+    });
+
+    // 자원이 명시된 예약에 대해서만 자원 충돌을 검사한다(자원 없는 단순 일정은 통과).
+    if (requestedResources.length > 0) {
+      // 같은 시각대(시간 겹침)와 후보를 좁히기 위해 DB 레벨 1차 필터:
+      // confirmed 상태 + (기존 end > 신규 start) AND (기존 start < 신규 end)
+      const overlappingCandidates = await Schedule.find({
+        status: 'confirmed',
+        start: { $lt: endDate },
+        end: { $gt: startDate }
+      }).lean();
+
+      const requestedSet = new Set(requestedResources);
+      const conflict = overlappingCandidates.find((existing) => {
+        // 시간 겹침: 프론트 timeOverlap 식과 일관 (start < otherEnd && end > otherStart)
+        const exStart = new Date(existing.start);
+        const exEnd = new Date(existing.end);
+        const timeOverlap = startDate < exEnd && endDate > exStart;
+        if (!timeOverlap) return false;
+        // 자원 겹침: 프론트 itemOverlap 과 동일 기준
+        const existingResources = extractResourceValues(existing);
+        return existingResources.some((r) => requestedSet.has(r));
+      });
+
+      if (conflict) {
+        return res.status(409).json({
+          error: '이미 해당 시간대에 같은 자원이 예약되어 있습니다.'
+        });
+      }
+    }
+    // ────────────────────────────────────────────────────────────────────
 
     const newSchedule = new Schedule(scheduleData);
 
